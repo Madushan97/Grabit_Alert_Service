@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+ 
+    <property name="LOG_LOCATION" value="/logs" />
+	<property name="LOG_PATTERN" value="[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%c{1}]- %msg%n"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>[%-5level] %d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+ 
+    <appender name="debugLogger" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${LOG_LOCATION}/debug.log</File>
+		<filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>DEBUG</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <encoder>
+             <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+       <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_LOCATION}/archived/debug/debug-%d{yyyy-MM-dd}.%i.log.zip</fileNamePattern>
+            <maxFileSize>10MB</maxFileSize>
+           <maxHistory>90</maxHistory>
+           <cleanHistoryOnStart>true</cleanHistoryOnStart>
+        </rollingPolicy>
+    </appender> 
+	<appender name="errorLogger" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${LOG_LOCATION}/error.log</File>
+		<filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <encoder>
+             <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+       <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_LOCATION}/archived/error/error-%d{yyyy-MM-dd}.%i.log.zip</fileNamePattern>
+            <maxFileSize>10MB</maxFileSize>
+           <maxHistory>90</maxHistory>
+           <cleanHistoryOnStart>true</cleanHistoryOnStart>
+        </rollingPolicy>
+    </appender>
+	
+	<appender name="infoLogger" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${LOG_LOCATION}/info.log</File>
+		<filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>INFO</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <encoder>
+             <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+       <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_LOCATION}/archived/info/info-%d{yyyy-MM-dd}.%i.log.zip</fileNamePattern>
+            <maxFileSize>10MB</maxFileSize>
+            <maxHistory>90</maxHistory>
+            <cleanHistoryOnStart>true</cleanHistoryOnStart>
+        </rollingPolicy>
+    </appender>
+
+	<appender name="warnLogger" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${LOG_LOCATION}/warn.log</File>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>WARN</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_LOCATION}/archived/warn/warn-%d{yyyy-MM-dd}.%i.log.zip</fileNamePattern>
+            <maxFileSize>10MB</maxFileSize>
+            <maxHistory>90</maxHistory>
+            <cleanHistoryOnStart>true</cleanHistoryOnStart>
+        </rollingPolicy>
+    </appender>
+	
+  <appender name="ASYNCDEBUG" class="ch.qos.logback.classic.AsyncAppender">
+    <appender-ref ref="debugLogger" />
+  </appender>
+  <appender name="ASYNCERROR" class="ch.qos.logback.classic.AsyncAppender">
+	<appender-ref ref="errorLogger" />
+  </appender>
+  <appender name="ASYNCINFO" class="ch.qos.logback.classic.AsyncAppender">
+	<appender-ref ref="infoLogger" />
+  </appender>
+  <appender name="ASYNCWARN" class="ch.qos.logback.classic.AsyncAppender">
+    <appender-ref ref="warnLogger" />
+  </appender>
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="ASYNCDEBUG"/>
+        <appender-ref ref="ASYNCERROR"/>
+        <appender-ref ref="ASYNCINFO"/>
+        <appender-ref ref="ASYNCWARN"/>
+    </root>
+	 
+	<!-- Removed duplicate legacy emailservice loggers (if still needed, re-add with correct package) -->
+
+</configuration>

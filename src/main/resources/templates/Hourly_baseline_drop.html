@@ -1,0 +1,95 @@
+<!-- language: html -->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional //EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="x-apple-disable-message-reformatting" content="true">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Hourly Sales Baseline Drop Alert</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f4f4; font-family: 'Roboto', sans-serif; color: #333;">
+<table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; margin: 0; padding: 0;">
+    <tr>
+        <td align="center" valign="top">
+            <table cellpadding="0" cellspacing="0" border="0" style="width:700px; max-width:700px; background-color: #ffffff; border-radius: 8px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);">
+                <tr>
+                    <td style="background-color: #f15b22; color: white; padding: 24px; text-align: center; border-top-left-radius: 8px; border-top-right-radius: 8px;">
+                        <h1 style="margin: 0; font-size: 26px;">Hourly Sales Drop Alert</h1>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 24px;">
+                        <h2 style="margin: 0 0 16px 0; font-size: 18px;">Summary</h2>
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border: 1px solid #ddd; border-collapse: collapse; margin-bottom: 16px;">
+                            <tr>
+                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Partner</th>
+                                <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${partner}">CBL</td>
+                            </tr>
+                            <tr>
+                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Hour</th>
+                                <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${hourOfDay}">00</td>
+                            </tr>
+                            <tr>
+                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Window</th>
+                                <td style="padding: 12px; border-bottom: 1px solid #ddd;"><span th:text="${windowStart}">start</span> - <span th:text="${windowEnd}">end</span></td>
+                            </tr>
+                            <tr>
+                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Criteria</th>
+                                <td style="padding: 12px; border-bottom: 1px solid #ddd;">SALE_COMPLETED &lt; <b th:text="${thresholdPercent}">30%</b> of baseline and persists for <b th:text="${consecutiveHours}">2</b> consecutive hours</td>
+                            </tr>
+                            <tr>
+                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Impacted Machines</th>
+                                <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${count}">0</td>
+                            </tr>
+                        </table>
+
+                        <h2 style="margin: 0 0 10px 0; font-size: 18px;">Impacted Machine Details</h2>
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border: 1px solid #ddd; border-collapse: collapse;">
+                            <thead>
+                            <tr>
+                                <th style="background-color: #f8f8f8; padding: 10px; border-bottom: 1px solid #ddd; text-align: left;">Vending Name</th>
+                                <th style="background-color: #f8f8f8; padding: 10px; border-bottom: 1px solid #ddd; text-align: left;">Serial</th>
+<!--                                <th style="background-color: #f8f8f8; padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">Baseline SALE_COMPLETED</th>-->
+                                <th style="background-color: #f8f8f8; padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">Now SALE_COMPLETED</th>
+                                <th style="background-color: #f8f8f8; padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">Now SALE_FAILED</th>
+                                <th style="background-color: #f8f8f8; padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">Now VOID_COMPLETE</th>
+                                <th style="background-color: #f8f8f8; padding: 10px; border-bottom: 1px solid #ddd; text-align: right;">Now VOID_FAILED</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="row : ${rows}">
+                                <td style="padding: 10px; border-bottom: 1px solid #eee;" th:text="${row.vmName}">VM Name</td>
+                                <td style="padding: 10px; border-bottom: 1px solid #eee;" th:text="${row.serial}">VM-001</td>
+                                <td style="padding: 10px; text-align: right; border-bottom: 1px solid #eee;" th:text="${row.baselineCompleted}">0</td>
+<!--                                <td style="padding: 10px; text-align: right; border-bottom: 1px solid #eee;" th:text="${row.nowCompleted}">0</td>-->
+                                <td style="padding: 10px; text-align: right; border-bottom: 1px solid #eee;" th:text="${row.nowFailed}">0</td>
+                                <td style="padding: 10px; text-align: right; border-bottom: 1px solid #eee;" th:text="${row.nowVoidCompleted}">0</td>
+                                <td style="padding: 10px; text-align: right; border-bottom: 1px solid #eee;" th:text="${row.nowVoidFailed}">0</td>
+                            </tr>
+                            <tr th:if="${rows == null or #lists.isEmpty(rows)}">
+                                <td colspan="7" style="padding: 10px; text-align: center; color: #777;">No impacted machines.</td>
+                            </tr>
+                            </tbody>
+                        </table>
+
+                        <p style="color: #333; margin-top: 16px; font-size: 14px; text-align: justify;">The monitoring system detected a drop in SALE_COMPLETED against the hourly baseline for the machines listed above. Please investigate and take corrective action if necessary.</p>
+
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 10px;">
+                            <tr>
+                                <td style="padding: 8px; font-size: 13px; color: #555;">Generated at: <span th:text="${now}">now</span></td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="background-color: #333; color: white; padding: 15px; text-align: center; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; font-size: 12px;">
+                        <p style="margin: 0;">&copy; <span th:text="${T(java.time.LocalDate).now().getYear()}">2025</span> GrabIt System. All Rights Reserved.</p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

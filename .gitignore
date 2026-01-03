@@ -1,0 +1,59 @@
+### Maven ###
+target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### Gradle ###
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### Logs ###
+logs/
+*.log
+
+### Env / Secrets ###
+.env
+.env.*
+application-local.yml
+application-dev.yml
+
+### OS ###
+.DS_Store
+Thumbs.db
+
+### Temp ###
+tmp/
+*.tmp
+*.pid
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### VS Code ###
+.vscode/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### Node (if applicable) ###
+node_modules/
+dist/
+npm-debug.log*
+yarn-debug.log*

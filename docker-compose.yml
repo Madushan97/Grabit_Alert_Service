@@ -1,0 +1,33 @@
+
+services:
+
+  notification-service:
+    image: cbaitd/boc:v1
+    container_name: notification-service
+    volumes:
+      - /home/vending-general/alert-service/logs:/logs
+    ports:
+      - "4545:8080"
+    restart: always
+    environment:
+      - SENDER_EMAIL_ADDRESS=wiremetest@boc.lk
+      - MAIL_ACCOUNT_USERNAME=wiremetest@boc.lk
+      - MAIL_ACCOUNT_PASSWORD=wiremetest12
+      - MAIL_ACCOUNT_HOST=172.24.2.26
+      - MAIL_ACCOUNT_PORT=25
+      - MAIL_SMTP_AUTH=false
+      - MAIL_SMTP_STARTTLS_ENABLE=true
+
+      - DB_HOST=124.43.71.173
+      - DB_PORT=1521
+      - DB_USER=BOC_UAT_TEST
+      - DB_PASSWORD=password
+      - DB_NAME=orcl
+      - DDL_AUTO_METHOD=update
+
+      - BANK_LOGO=
+    networks:
+      - wireme-core-ca-network
+networks:
+  wireme-core-ca-network:
+    driver: bridge
