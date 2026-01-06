@@ -1,73 +1,14 @@
 spring:
   application:
     name: VendingMachineAlertService
-
-  datasource:
-    url: jdbc:mysql://localhost:3306/vm_alert_service
-    username: root
-    password: madushan
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
-  jpa:
-    show-sql: false
-    hibernate:
-      ddl-auto: update
-      naming:
-        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
-
-  mail:
-    default-encoding: UTF-8
-    host: smtp.gmail.com
-    username: cba.wireme@gmail.com
-    password: tdahitvmbpexfkpd
-#    username: sltclog2119@gmail.com
-#    password: sacvdhoycreovxpy
-    port: 587
-    protocol: smtp
-    test-connection: false
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-
-grabit:
-  logo:
-
-monitor:
-#  Failed sales cron
-  enabled: true
-  cron: "0 */5 * * * *" # every 5 minutes
-  windowSize: 10
-  failureThreshold: 3
-  alertCooldownMinutes: 60
-  slidingWindowSize: 10
-  slidingFailureThreshold: 5
-
-#  baseline monitor
-  baselineEnabled: true
-  baselineCron: "0 30 2 * * *"
-  lookback-period-months: 1
-
-#  Sales report configuration
-  reportEnabled:
-  reportCron:
-  reportWindowHours:
-  reportBaselineHours:
-
-#  Hourly sales baseline computation
-
-
-cbl-monitor:
-  enabled: true
-  cron: 0 0 * * * *
-
+  profiles:
+    active: dev
 
 
 server:
   port: 6060
   servlet:
     context-path: /alert-service
+
 
 

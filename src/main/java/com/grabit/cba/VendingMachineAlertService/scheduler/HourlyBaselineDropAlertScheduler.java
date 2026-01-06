@@ -164,7 +164,8 @@ public class HourlyBaselineDropAlertScheduler {
                 continue; // no anomaly in current hour
             }
 
-            boolean consecutiveSatisfied = requiredConsecutive <= 1; // if 1, current drop is enough
+//            boolean consecutiveSatisfied = requiredConsecutive <= 1; // (if 1, current drop is enough)
+            boolean consecutiveSatisfied = true;
             if (!consecutiveSatisfied) {
                 // Evaluate previous hour drop using its baseline and sales window
                 AlertHourlySalesBaseline.Id prevId = new AlertHourlySalesBaseline.Id(vmId, prevHourOfDay);
@@ -266,14 +267,15 @@ public class HourlyBaselineDropAlertScheduler {
                 if (c.length > 0) mail.setCc(c);
                 if (b.length > 0) mail.setBcc(b);
             });
-            if (mail.getTo() == null || mail.getTo().length == 0) {
-                List<String> defaultRecipients = monitorProperties.getRecipients();
-                if (defaultRecipients == null || defaultRecipients.isEmpty()) {
-                    LOGGER.warn("No recipients configured for baseline drop alert; aborting email send");
-                    return;
-                }
-                mail.setTo(defaultRecipients.toArray(new String[0]));
-            }
+
+//            if (mail.getTo() == null || mail.getTo().length == 0) {
+//                List<String> defaultRecipients = monitorProperties.getRecipients();
+//                if (defaultRecipients == null || defaultRecipients.isEmpty()) {
+//                    LOGGER.warn("No recipients configured for baseline drop alert; aborting email send");
+//                    return;
+//                }
+//                mail.setTo(defaultRecipients.toArray(new String[0]));
+//            }
 
             emailSender.sendEmail(mail, null, null);
             LOGGER.info("Sent baseline drop alert email for {} machines", rowsToAlert.size());

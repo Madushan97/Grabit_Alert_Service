@@ -2,6 +2,7 @@ package com.grabit.cba.VendingMachineAlertService.database.model.other;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Immutable;
 
 @Entity
 @Table(name = "Partners")
@@ -9,6 +10,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Immutable
+
 public class Partners {
 
     @Id

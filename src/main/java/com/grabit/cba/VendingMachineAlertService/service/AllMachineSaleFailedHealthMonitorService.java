@@ -229,9 +229,11 @@ public class AllMachineSaleFailedHealthMonitorService {
             ccAddrs = EmailServiceUtils.commaSeparatedStringToArray(cfg.getCc());
             bccAddrs = EmailServiceUtils.commaSeparatedStringToArray(cfg.getBcc());
         }
-        if (toAddrs == null || toAddrs.length == 0) {
-            toAddrs = EmailServiceUtils.commaSeparatedStringToArray(String.join(",", allMachinesMonitorProperties.getRecipients()));
-        }
+
+//        if (toAddrs == null || toAddrs.length == 0) {
+//            toAddrs = EmailServiceUtils.commaSeparatedStringToArray(String.join(",", allMachinesMonitorProperties.getRecipients()));
+//        }
+
         mailDto.setTo(toAddrs);
         mailDto.setCc(ccAddrs);
         mailDto.setBcc(bccAddrs);

@@ -2,12 +2,15 @@ package com.grabit.cba.VendingMachineAlertService.database.model.other;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.Immutable;
 
 import java.util.Objects;
 
 @Entity
 @Table(name = "VendingMachines")
 @Data
+@Immutable
+
 public class VendingMachine {
 
     @Id

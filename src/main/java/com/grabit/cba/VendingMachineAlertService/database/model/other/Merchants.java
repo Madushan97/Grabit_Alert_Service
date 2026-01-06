@@ -2,12 +2,14 @@ package com.grabit.cba.VendingMachineAlertService.database.model.other;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Immutable;
 
 @Entity
 @Table(name = "Merchants")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Immutable
 @Builder
 public class Merchants {
 

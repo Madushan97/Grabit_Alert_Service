@@ -16,7 +16,7 @@ public class AllMachinesMonitorProperties {
     private String cron = "0 */5 * * * *"; // every 5 minutes (Spring cron with seconds)
     private int windowSize = 10;            // Number of latest transactions to inspect per machine
     private int failureThreshold = 3;       // Consecutive failure threshold
-    private List<String> recipients;        // Email recipients
+//    private List<String> recipients;        // Email recipients
     private int alertCooldownMinutes = 60;  // Minutes to suppress repeated alerts for the same machine and alert type
     private int slidingWindowSize = 10;     // Sliding window size (number of latest transactions to inspect for non-consecutive failure check)
     private int slidingFailureThreshold = 5;    // Sliding window failure threshold (e.g., 5 failures within slidingWindowSize)
@@ -26,7 +26,6 @@ public class AllMachinesMonitorProperties {
     private String reportCron = "0 0 * * * *"; // every hour at minute 0
     private int reportWindowHours = 1; // window to report (hours)
     private int reportBaselineHours = 24; // baseline period hours for average
-//    private List<String> reportRecipients; // optional override recipients for reports
 
     /****************************************************** HOURLY SALES BASELINE COMPUTATION *****************************************************/
     private boolean baselineEnabled = true;

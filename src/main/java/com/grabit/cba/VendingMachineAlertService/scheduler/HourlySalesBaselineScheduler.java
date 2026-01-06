@@ -46,8 +46,8 @@ public class HourlySalesBaselineScheduler {
     }
 
     // run once a day to compute baselines
-//    @Scheduled(cron = "${monitor.baselineCron:0 30 2 * * *}")
-    @Scheduled(cron = "0 * * * * *")
+    @Scheduled(cron = "${monitor.baselineCron:0 30 2 * * *}")
+//    @Scheduled(cron = "0 * * * * *")
     @Transactional
     public void computeBaseline() {
         LOGGER.info("Hourly baseline job start for partner CBL");

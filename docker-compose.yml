@@ -1,14 +1,14 @@
 
 services:
 
-  notification-service:
-    image: cbaitd/boc:v1
-    container_name: notification-service
+  alerting-service:
+    image: cbaitgrabit/docker:alerting-service:latest
+    container_name: alerting-service
     volumes:
       - /home/vending-general/alert-service/logs:/logs
     ports:
       - "4545:8080"
-    restart: always
+    restart: unless-stopped
     environment:
       - SENDER_EMAIL_ADDRESS=wiremetest@boc.lk
       - MAIL_ACCOUNT_USERNAME=wiremetest@boc.lk
@@ -27,7 +27,8 @@ services:
 
       - BANK_LOGO=
     networks:
-      - wireme-core-ca-network
+      - laravel
+      -
 networks:
-  wireme-core-ca-network:
+  laravel:
     driver: bridge
