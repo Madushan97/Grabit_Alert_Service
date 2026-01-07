@@ -20,7 +20,7 @@ public class AlertEmailConfig {
     private AlertType alertType;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "partnerId", nullable = false)
+    @JoinColumn(name = "partnerId")
     private Partners partners;
 
     @Column(name = "\"to\"")

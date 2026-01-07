@@ -2,33 +2,45 @@
 services:
 
   alerting-service:
-    image: cbaitgrabit/docker:alerting-service:latest
+    image: cbaitgrabit/docker:Grabit-Alerting-Service:V1.0.0
     container_name: alerting-service
     volumes:
       - /home/vending-general/alert-service/logs:/logs
     ports:
-      - "4545:8080"
+      - "6060:6060"
     restart: unless-stopped
     environment:
-      - SENDER_EMAIL_ADDRESS=wiremetest@boc.lk
-      - MAIL_ACCOUNT_USERNAME=wiremetest@boc.lk
-      - MAIL_ACCOUNT_PASSWORD=wiremetest12
-      - MAIL_ACCOUNT_HOST=172.24.2.26
-      - MAIL_ACCOUNT_PORT=25
-      - MAIL_SMTP_AUTH=false
-      - MAIL_SMTP_STARTTLS_ENABLE=true
+      - DATABASE_HOST=138.201.99.178
+      - DATABASE_PORT=3306
+      - DATABASE_NAME=vendingdb_general
+      - DATABASE_USERNAME=remote
+      - DATABASE_PASSWORD=Layantha@193#
+      - DDL_AUTO_METHOD=none
 
-      - DB_HOST=124.43.71.173
-      - DB_PORT=1521
-      - DB_USER=BOC_UAT_TEST
-      - DB_PASSWORD=password
-      - DB_NAME=orcl
-      - DDL_AUTO_METHOD=update
+      - SMTP_USERNAME=cba.wireme@gmail.com
+      - SMTP_PASSWORD=tdahitvmbpexfkpd
+      - SMTP_AUTH=true
+      - SMTP_STARTTLS=true
 
-      - BANK_LOGO=
+      - FAILED_SALES_MONITOR_ENABLED=true
+      - FAILED_SALES_MONITOR_CRON=0 */5 * * * *
+      - FAILED_SALES_MONITOR_WINDOW_SIZE=10
+      - FAILED_SALES_MONITOR_FAILURE_THRESHOLD=3
+      - FAILED_SALES_MONITOR_ALERT_COOLDOWN_MINUTES=60
+      - FAILED_SALES_MONITOR_SLIDING_WINDOW_SIZE=10
+      - FAILED_SALES_MONITOR_SLIDING_FAILURE_THRESHOLD=5
+
+      - BASELINE_MONITOR_ENABLED=true
+      - BASELINE_MONITOR_CRON=0 30 2 * * *
+      - BASELINE_MONITOR_LOOKBACK_PERIOD_MONTHS=1
+
+      - HOURLY_BASELINE_ALERT_ENABLED=true
+      - HOURLY_BASELINE_ALERT_CRON=0 5 * * * *
+      - HOURLY_BASELINE_ALERT_DROP_THRESHOLD_PERCENT=0.30
+      - HOURLY_BASELINE_CONSECUTIVE_HOURS_REQUIRED=2
+
     networks:
       - laravel
-      -
 networks:
   laravel:
     driver: bridge

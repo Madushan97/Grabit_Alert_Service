@@ -10,7 +10,6 @@ import java.util.Objects;
 @Table(name = "VendingMachines")
 @Data
 @Immutable
-
 public class VendingMachine {
 
     @Id
