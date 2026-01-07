@@ -21,11 +21,11 @@ public class AllMachinesMonitorProperties {
     private int slidingWindowSize = 10;     // Sliding window size (number of latest transactions to inspect for non-consecutive failure check)
     private int slidingFailureThreshold = 5;    // Sliding window failure threshold (e.g., 5 failures within slidingWindowSize)
 
-    /****************************************************** SALES ALERT configuration *****************************************************/
-    private boolean reportEnabled = true;
-    private String reportCron = "0 0 * * * *"; // every hour at minute 0
-    private int reportWindowHours = 1; // window to report (hours)
-    private int reportBaselineHours = 24; // baseline period hours for average
+//    /****************************************************** SALES ALERT configuration *****************************************************/
+//    private boolean reportEnabled = true;
+//    private String reportCron = "0 0 * * * *"; // every hour at minute 0
+//    private int reportWindowHours = 1; // window to report (hours)
+//    private int reportBaselineHours = 24; // baseline period hours for average
 
     /****************************************************** HOURLY SALES BASELINE COMPUTATION *****************************************************/
     private boolean baselineEnabled = true;

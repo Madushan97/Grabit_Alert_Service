@@ -26,7 +26,7 @@ public class EmailSenderImpl implements EmailSender {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EmailSenderImpl.class);
 
-    public void sendEmail(MailDto mailDto, String logo, String signData) throws Exception {
+    public boolean sendEmail(MailDto mailDto, String logo, String signData) throws Exception {
         try {
             MimeMessage message = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED,
@@ -56,6 +56,7 @@ public class EmailSenderImpl implements EmailSender {
 //                helper.addInline("signature", signatureDs);
 //            }
             javaMailSender.send(message);
+            return true;
         } catch (MailSendException mse) {
             LOGGER.error("Error occurred while sending email: {}", mse.getMessage(), mse);
             throw new ClientErrorException(mse.getMessageExceptions()[0].getMessage(), mse);
@@ -68,7 +69,7 @@ public class EmailSenderImpl implements EmailSender {
         }
     }
 
-    public void sendEmailWithAttachment(MailDto mailDto, byte[] fileContent, String fileName, String logo) throws Exception {
+    public boolean sendEmailWithAttachment(MailDto mailDto, byte[] fileContent, String fileName, String logo) throws Exception {
         try {
             MimeMessage message = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED,
@@ -94,6 +95,7 @@ public class EmailSenderImpl implements EmailSender {
                 helper.addInline("grabit-logo", logoDs);
             }
             javaMailSender.send(message);
+            return true;
         } catch (MailSendException mse) {
             LOGGER.error("Error occurred while sending email: {}", mse.getMessage(), mse);
             throw new ClientErrorException(mse.getMessageExceptions()[0].getMessage(), mse);

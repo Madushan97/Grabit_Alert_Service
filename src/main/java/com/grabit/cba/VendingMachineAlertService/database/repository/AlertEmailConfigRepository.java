@@ -2,6 +2,7 @@ package com.grabit.cba.VendingMachineAlertService.database.repository;
 
 import com.grabit.cba.VendingMachineAlertService.database.model.AlertEmailConfig;
 import com.grabit.cba.VendingMachineAlertService.database.model.AlertType;
+import com.grabit.cba.VendingMachineAlertService.database.model.other.Partners;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -14,5 +15,6 @@ public interface AlertEmailConfigRepository extends JpaRepository<AlertEmailConf
     List<AlertEmailConfig> findByAlertType(AlertType alertType);
 
     Optional<AlertEmailConfig> findFirstByAlertType(AlertType alertType);
-}
 
+    Optional<AlertEmailConfig> findFirstByAlertTypeAndPartners(AlertType alertType, Partners partners);
+}

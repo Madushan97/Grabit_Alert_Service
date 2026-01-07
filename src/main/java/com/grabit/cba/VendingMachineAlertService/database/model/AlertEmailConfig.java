@@ -1,5 +1,6 @@
 package com.grabit.cba.VendingMachineAlertService.database.model;
 
+import com.grabit.cba.VendingMachineAlertService.database.model.other.Partners;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -17,6 +18,10 @@ public class AlertEmailConfig {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "alertTypeId", nullable = false)
     private AlertType alertType;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "partnerId", nullable = false)
+    private Partners partners;
 
     @Column(name = "\"to\"")
     private String to;

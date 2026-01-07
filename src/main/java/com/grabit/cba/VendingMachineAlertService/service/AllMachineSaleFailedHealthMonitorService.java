@@ -230,10 +230,6 @@ public class AllMachineSaleFailedHealthMonitorService {
             bccAddrs = EmailServiceUtils.commaSeparatedStringToArray(cfg.getBcc());
         }
 
-//        if (toAddrs == null || toAddrs.length == 0) {
-//            toAddrs = EmailServiceUtils.commaSeparatedStringToArray(String.join(",", allMachinesMonitorProperties.getRecipients()));
-//        }
-
         mailDto.setTo(toAddrs);
         mailDto.setCc(ccAddrs);
         mailDto.setBcc(bccAddrs);

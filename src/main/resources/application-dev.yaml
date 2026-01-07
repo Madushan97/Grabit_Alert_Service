@@ -46,20 +46,16 @@ monitor:
 #  HOURLY SALES BASELINE COMPUTATION
   baselineEnabled: true
   baselineCron: "0 30 2 * * *"
-  lookback-period-months: 1
+  lookback-period-months: 3
 
 #  SALES ALERT configuration
-  reportEnabled: true
-  reportCron: "0 0 * * * *"
-  reportWindowHours: 1
-  reportBaselineHours: 24
+#  reportEnabled: true
+#  reportCron: "0 0 * * * *"
+#  reportWindowHours: 1
+#  reportBaselineHours: 24
 
 #  Hourly sales baseline computation
   hourlyBaselineAlertEnabled: true
   hourlyBaselineAlertCron: "0 5 * * * *"
   baselineDropThresholdPercent: 0.30
   baselineConsecutiveHoursRequired: 2
-
-cbl-monitor:
-  enabled: true
-  cron: 0 0 * * * *
