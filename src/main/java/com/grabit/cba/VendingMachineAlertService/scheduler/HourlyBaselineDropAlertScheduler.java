@@ -91,7 +91,7 @@ public class HourlyBaselineDropAlertScheduler {
     }
 
 //    @Scheduled(cron = "${monitor.hourlyBaselineAlertCron:0 5 * * * *}")
-    @Scheduled(cron = "0 * * * * *")
+//    @Scheduled(cron = "0 * * * * *")
     public void evaluateHourlyDrops() {
         if (!monitorProperties.isHourlyBaselineAlertEnabled()) {
             LOGGER.info("Hourly baseline drop alert disabled; skipping");
@@ -289,7 +289,9 @@ public class HourlyBaselineDropAlertScheduler {
                     LOGGER.warn("Partner={} email not sent; skipping AlertHistory upsert", partnerName);
                     continue;
                 }
-                LOGGER.info("Partner={} sent baseline drop alert email for {} machines", partnerName, rowsToAlert.size());
+                String timestamp = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                String recipients = (mail.getTo() != null && mail.getTo().length > 0) ? String.join(",", mail.getTo()) : "<none>";
+                LOGGER.info("Partner={} sent baseline drop alert email at {} to {} for {} machines", partnerName, timestamp, recipients, rowsToAlert.size());
 
                 // Upsert AlertHistory for each machine alerted
                 for (EmailRow r : rowsToAlert) {

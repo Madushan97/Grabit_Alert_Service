@@ -6,6 +6,7 @@ import com.grabit.cba.VendingMachineAlertService.database.model.AlertHistory;
 import com.grabit.cba.VendingMachineAlertService.database.model.AlertType;
 import com.grabit.cba.VendingMachineAlertService.database.model.other.Sales;
 import com.grabit.cba.VendingMachineAlertService.database.model.other.VendingMachine;
+import com.grabit.cba.VendingMachineAlertService.database.model.other.Partners;
 import com.grabit.cba.VendingMachineAlertService.database.repository.*;
 import com.grabit.cba.VendingMachineAlertService.dto.requestDto.MailDto;
 import com.grabit.cba.VendingMachineAlertService.util.EmailServiceUtils;
@@ -38,6 +39,7 @@ public class AllMachineSaleFailedHealthMonitorService {
     private final AlertEmailConfigRepository alertEmailConfigRepository;
     private final TemplateEngine templateEngine;
     private final com.grabit.cba.VendingMachineAlertService.database.repository.MerchantsRepository merchantsRepository;
+    private final com.grabit.cba.VendingMachineAlertService.database.repository.PartnersRepository partnersRepository;
 
     @Value("${spring.mail.username}")
     private String senderMail;
@@ -50,7 +52,8 @@ public class AllMachineSaleFailedHealthMonitorService {
 
     public AllMachineSaleFailedHealthMonitorService(AllMachinesMonitorProperties allMachinesMonitorProperties, SalesRepository salesRepository, VMRepository vmRepository, EmailSender emailSender,
                                                     AlertHistoryRepository alertHistoryRepository, AlertTypeRepository alertTypeRepository, AlertEmailConfigRepository alertEmailConfigRepository,
-                                                    TemplateEngine templateEngine, com.grabit.cba.VendingMachineAlertService.database.repository.MerchantsRepository merchantsRepository) {
+                                                    TemplateEngine templateEngine, com.grabit.cba.VendingMachineAlertService.database.repository.MerchantsRepository merchantsRepository,
+                                                    com.grabit.cba.VendingMachineAlertService.database.repository.PartnersRepository partnersRepository) {
         this.allMachinesMonitorProperties = allMachinesMonitorProperties;
         this.salesRepository = salesRepository;
         this.vmRepository = vmRepository;
@@ -60,6 +63,7 @@ public class AllMachineSaleFailedHealthMonitorService {
         this.alertEmailConfigRepository = alertEmailConfigRepository;
         this.templateEngine = templateEngine;
         this.merchantsRepository = merchantsRepository;
+        this.partnersRepository = partnersRepository;
     }
 
     @PostConstruct
@@ -74,15 +78,38 @@ public class AllMachineSaleFailedHealthMonitorService {
             return;
         }
         LOGGER.info("Monitor evaluation start for time {}", LocalDateTime.now());
-        // Get all vending machines and iterate by serial number
-        vmRepository.findAll().forEach(vm -> {
-            String serial = vm.getSerialNo();
-            try {
-                evaluateMachine(serial);
-            } catch (Exception e) {
-                LOGGER.error("Error evaluating machine {}: {}", serial, e.getMessage(), e);
+        // Evaluate by partner -> merchants -> active vending machines
+        List<Partners> partners = partnersRepository.findAll();
+        if (partners == null || partners.isEmpty()) {
+            LOGGER.warn("No partners found; skipping evaluation");
+        } else {
+            for (Partners partner : partners) {
+                try {
+                    Integer partnerId = partner.getId();
+                    List<Integer> merchantIds = merchantsRepository.findIdsByPartnerIds(Collections.singletonList(partnerId));
+                    if (merchantIds == null || merchantIds.isEmpty()) {
+                        LOGGER.debug("Skipping partner {} (id={}) due to no merchants", partner.getName(), partnerId);
+                        continue;
+                    }
+                    List<VendingMachine> activeMachines = vmRepository.findActiveByMerchantIds(merchantIds);
+                    if (activeMachines == null || activeMachines.isEmpty()) {
+                        LOGGER.debug("Skipping partner {} (id={}) due to no active vending machines", partner.getName(), partnerId);
+                        continue;
+                    }
+                    // Evaluate same logic per machine
+                    for (VendingMachine vm : activeMachines) {
+                        String serial = vm.getSerialNo();
+                        try {
+                            evaluateMachine(serial);
+                        } catch (Exception e) {
+                            LOGGER.error("Error evaluating machine {} for partner {}: {}", serial, partner.getName(), e.getMessage(), e);
+                        }
+                    }
+                } catch (Exception ex) {
+                    LOGGER.error("Error while evaluating partner {}: {}", partner.getName(), ex.getMessage(), ex);
+                }
             }
-        });
+        }
         LOGGER.info("Monitor evaluation end for time {}", LocalDateTime.now());
     }
 
@@ -97,7 +124,11 @@ public class AllMachineSaleFailedHealthMonitorService {
         try {
             List<AlertType> alertTypes = alertTypeRepository.findAll();
             if (alertTypes.isEmpty()) {
-                failureStatuses = new HashSet<>(Arrays.asList("SALE_FAILED", "TIMEOUT", "VOID_FAILED"));
+                failureStatuses = new HashSet<>(Arrays.asList(
+                        "SALE_FAILED"
+//                        "TIMEOUT",
+//                        "VOID_FAILED"
+                ));
             } else {
                 failureStatuses = alertTypes.stream()
                         .map(AlertType::getCode)
@@ -222,7 +253,26 @@ public class AllMachineSaleFailedHealthMonitorService {
         String[] ccAddrs = null;
         String[] bccAddrs = null;
 
-        java.util.Optional<AlertEmailConfig> optCfg = alertEmailConfigRepository.findFirstByAlertType(selectedAlertType);
+        // Determine partner for the machine to select correct AlertEmailConfig
+        Partners machinePartner = null;
+        VendingMachine vmForPartner = vmRepository.findBySerialNo(serialNo).orElse(null);
+        if (vmForPartner != null && vmForPartner.getMerchantId() != null) {
+            try {
+                Optional<com.grabit.cba.VendingMachineAlertService.database.model.other.Merchants> merchantOpt = merchantsRepository.findById(vmForPartner.getMerchantId());
+                if (merchantOpt.isPresent() && merchantOpt.get().getPartnerId() != null) {
+                    Integer partnerId = merchantOpt.get().getPartnerId();
+                    try {
+                        machinePartner = partnersRepository.findById(partnerId).orElse(null);
+                    } catch (Exception ignore) { }
+                }
+            } catch (Exception ex) {
+                LOGGER.debug("Could not resolve partner for machine {}: {}", serialNo, ex.getMessage());
+            }
+        }
+
+        java.util.Optional<AlertEmailConfig> optCfg;
+        optCfg = alertEmailConfigRepository.findFirstByAlertTypeAndPartners(selectedAlertType, machinePartner);
+
         if (optCfg.isPresent()) {
             AlertEmailConfig cfg = optCfg.get();
             toAddrs = EmailServiceUtils.commaSeparatedStringToArray(cfg.getTo());
@@ -306,34 +356,45 @@ public class AllMachineSaleFailedHealthMonitorService {
             String htmlBody = templateEngine.process("Sale_failed", context);
             mailDto.setBody(htmlBody);
 
-            emailSender.sendEmail(mailDto, grabitLogo, null);
-            LOGGER.info("Alert email sent for machine {} (consecutiveFailures={}, failuresInWindow={})", serialNo, consecutiveFailures, failuresInWindow);
+            boolean emailSent = emailSender.sendEmail(mailDto, grabitLogo, null);
+            if (emailSent) {
+                String partnerNameLog = machinePartner != null ? machinePartner.getName() : "UNKNOWN";
+                String toLog = (toAddrs != null && toAddrs.length > 0) ? String.join(",", toAddrs) : "<none>";
+                LOGGER.info("Email has been sent at {} to partner {} email {}", java.time.LocalDateTime.now(java.time.ZoneId.systemDefault()), partnerNameLog, toLog);
+                LOGGER.info("Alert email sent for machine {} (consecutiveFailures={}, failuresInWindow={})", serialNo, consecutiveFailures, failuresInWindow);
 
-            // persist/update AlertHistory as before
-            java.time.LocalDateTime sendTime = java.time.LocalDateTime.now(ZoneId.systemDefault());
-            if (last.isPresent()) {
-                AlertHistory existing = last.get();
-                existing.setVendingMachineId(vmId);
-                existing.setVendingMachineSerial(serialNo);
-                existing.setLastSentAt(sendTime);
-                existing.setAlertType(selectedAlertType);
-                alertHistoryRepository.saveAndFlush(existing);
-                LOGGER.info("Updated existing AlertHistory id={} for machine {} with lastSentAt={}", existing.getId(), serialNo, existing.getLastSentAt());
-            } else {
-                AlertHistory history = new AlertHistory();
-                history.setVendingMachineId(vmId);
-                history.setVendingMachineSerial(serialNo);
-                if (history.getVendingMachineId() == null) {
-                    LOGGER.warn("Could not resolve vendingMachineId for serial {}; AlertHistory will store null", serialNo);
+                // persist/update AlertHistory ONLY if email was sent successfully
+                java.time.LocalDateTime sendTime = java.time.LocalDateTime.now(ZoneId.systemDefault());
+                if (last.isPresent()) {
+                    AlertHistory existing = last.get();
+                    existing.setVendingMachineId(vmId);
+                    existing.setVendingMachineSerial(serialNo);
+                    existing.setLastSentAt(sendTime);
+                    existing.setAlertType(selectedAlertType);
+                    // store partner name if available
+                    if (machinePartner != null) {
+                        existing.setPartnerName(machinePartner.getName());
+                    }
+                    alertHistoryRepository.saveAndFlush(existing);
+                    LOGGER.info("Updated existing AlertHistory id={} for machine {} with lastSentAt={}", existing.getId(), serialNo, existing.getLastSentAt());
+                } else {
+                    AlertHistory history = new AlertHistory();
+                    history.setVendingMachineId(vmId);
+                    history.setVendingMachineSerial(serialNo);
+                    if (history.getVendingMachineId() == null) {
+                        LOGGER.warn("Could not resolve vendingMachineId for serial {}; AlertHistory will store null", serialNo);
+                    }
+                    history.setLastSentAt(sendTime);
+                    history.setAlertType(selectedAlertType);
+                    history.setPartnerName(machinePartner != null ? machinePartner.getName() : null);
+                    alertHistoryRepository.saveAndFlush(history);
+                    LOGGER.info("Inserted AlertHistory for machine {} at {} (history id={})", serialNo, history.getLastSentAt(), history.getId());
                 }
-                history.setLastSentAt(sendTime);
-                history.setAlertType(selectedAlertType);
-                history.setPartnerName(null);
-                alertHistoryRepository.saveAndFlush(history);
-                LOGGER.info("Inserted AlertHistory for machine {} at {} (history id={})", serialNo, history.getLastSentAt(), history.getId());
-            }
 
-            unhealthyMachinesLastFailure.put(serialNo, lastFailureTime);
+                unhealthyMachinesLastFailure.put(serialNo, lastFailureTime);
+            } else {
+                LOGGER.warn("Email send returned false for machine {}; skipping AlertHistory persist", serialNo);
+            }
         } catch (Exception e) {
             LOGGER.error("Failed to send alert email for machine {}: {}", serialNo, e.getMessage(), e);
         }

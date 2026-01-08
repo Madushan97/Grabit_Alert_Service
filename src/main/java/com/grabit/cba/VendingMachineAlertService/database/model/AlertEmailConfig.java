@@ -3,6 +3,7 @@ package com.grabit.cba.VendingMachineAlertService.database.model;
 import com.grabit.cba.VendingMachineAlertService.database.model.other.Partners;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
 
 import java.time.Instant;
 
@@ -15,6 +16,7 @@ public class AlertEmailConfig {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "alertTypeId", nullable = false)
     private AlertType alertType;
