@@ -9,6 +9,7 @@ import com.grabit.cba.VendingMachineAlertService.database.model.other.VendingMac
 import com.grabit.cba.VendingMachineAlertService.database.model.other.Partners;
 import com.grabit.cba.VendingMachineAlertService.database.repository.*;
 import com.grabit.cba.VendingMachineAlertService.dto.requestDto.MailDto;
+import com.grabit.cba.VendingMachineAlertService.enums.TransactionTypes;
 import com.grabit.cba.VendingMachineAlertService.util.EmailServiceUtils;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
@@ -69,11 +70,14 @@ public class AllMachineSaleFailedHealthMonitorService {
     @PostConstruct
     public void init() {
         LOGGER.info("MachineHealthMonitorService initialized. enabled={}, cron={}, windowSize={}, failureThreshold={}",
-                allMachinesMonitorProperties.isEnabled(), allMachinesMonitorProperties.getCron(), allMachinesMonitorProperties.getWindowSize(), allMachinesMonitorProperties.getFailureThreshold());
+                allMachinesMonitorProperties.getFailedSales().isEnabled(),
+                allMachinesMonitorProperties.getFailedSales().getCron(),
+                allMachinesMonitorProperties.getFailedSales().getWindowSize(),
+                allMachinesMonitorProperties.getFailedSales().getFailureThreshold());
     }
 
     public void evaluateAllMachines() {
-        if (!allMachinesMonitorProperties.isEnabled()) {
+        if (!allMachinesMonitorProperties.getFailedSales().isEnabled()) {
             LOGGER.info("Monitor disabled; skipping evaluation");
             return;
         }
@@ -114,7 +118,7 @@ public class AllMachineSaleFailedHealthMonitorService {
     }
 
     public void evaluateMachine(String serialNo) {
-        List<Sales> latest = salesRepository.findLatestByMachineSerial(serialNo, PageRequest.of(0, allMachinesMonitorProperties.getWindowSize()));
+        List<Sales> latest = salesRepository.findLatestByMachineSerial(serialNo, PageRequest.of(0, allMachinesMonitorProperties.getFailedSales().getWindowSize()));
         if (latest.isEmpty()) {
             LOGGER.debug("No transactions found for machine {}", serialNo);
             return;
@@ -125,7 +129,7 @@ public class AllMachineSaleFailedHealthMonitorService {
             List<AlertType> alertTypes = alertTypeRepository.findAll();
             if (alertTypes.isEmpty()) {
                 failureStatuses = new HashSet<>(Arrays.asList(
-                        "SALE_FAILED"
+                        TransactionTypes.SALE_FAILED.name()
 //                        "TIMEOUT",
 //                        "VOID_FAILED"
                 ));
@@ -138,7 +142,7 @@ public class AllMachineSaleFailedHealthMonitorService {
             }
         } catch (Exception ex) {
             LOGGER.warn("Could not load failure statuses from AlertType table, using defaults: {}", ex.getMessage());
-            failureStatuses = new HashSet<>(Arrays.asList("SALE_FAILED", "TIMEOUT", "VOID_FAILED"));
+            failureStatuses = new HashSet<>(Arrays.asList("SALE_FAILED"));
         }
 
         int consecutiveFailures = 0;
@@ -159,8 +163,8 @@ public class AllMachineSaleFailedHealthMonitorService {
         }
 
         // Sliding window check: count failures within the configured slidingWindowSize
-        int slidingWindowSize = allMachinesMonitorProperties.getSlidingWindowSize();
-        int slidingFailureThreshold = allMachinesMonitorProperties.getSlidingFailureThreshold();
+        int slidingWindowSize = allMachinesMonitorProperties.getFailedSales().getSlidingWindowSize();
+        int slidingFailureThreshold = allMachinesMonitorProperties.getFailedSales().getSlidingFailureThreshold();
         int failuresInWindow = 0;
         List<Sales> slidingList = latest.size() <= slidingWindowSize ? latest : latest.subList(0, slidingWindowSize);
         for (Sales s : slidingList) {
@@ -170,7 +174,7 @@ public class AllMachineSaleFailedHealthMonitorService {
             }
         }
 
-        boolean consecutiveTriggered = consecutiveFailures >= allMachinesMonitorProperties.getFailureThreshold();
+        boolean consecutiveTriggered = consecutiveFailures >= allMachinesMonitorProperties.getFailedSales().getFailureThreshold();
         boolean slidingTriggered = failuresInWindow >= slidingFailureThreshold;
 
         if (consecutiveTriggered || slidingTriggered) {
@@ -201,7 +205,8 @@ public class AllMachineSaleFailedHealthMonitorService {
             return;
         }
 
-        final String alertCode = "SALE_FAILED";
+        final String alertCode = TransactionTypes.SALE_FAILED.name();
+
         AlertType selectedAlertType = alertTypeRepository.findByCode(alertCode).orElse(null);
         if (selectedAlertType == null) {
             LOGGER.warn("AlertType '{}' not found; skipping alert for machine {}", alertCode, serialNo);
@@ -236,7 +241,7 @@ public class AllMachineSaleFailedHealthMonitorService {
                     unhealthyMachinesLastFailure.put(serialNo, lastFailureTime);
                     return;
                 }
-                long cooldownMinutes = allMachinesMonitorProperties.getAlertCooldownMinutes();
+                long cooldownMinutes = allMachinesMonitorProperties.getFailedSales().getAlertCooldownMinutes();
                 java.time.LocalDateTime now = java.time.LocalDateTime.now(ZoneId.systemDefault());
                 java.time.Duration elapsed = java.time.Duration.between(lastSent, now);
                 if (elapsed.toMinutes() < cooldownMinutes) {

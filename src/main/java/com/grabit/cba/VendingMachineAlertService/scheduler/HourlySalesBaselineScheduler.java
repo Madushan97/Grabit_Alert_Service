@@ -12,22 +12,28 @@ import com.grabit.cba.VendingMachineAlertService.database.repository.VMRepositor
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Component
 public class HourlySalesBaselineScheduler {
 
-    @Value("${monitor.lookback-period-months}")
+    @Value("${monitor.baseline.lookback-period-months}")
     private Integer lookbackPeriodsMonths;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HourlySalesBaselineScheduler.class);
+
+    // Optional safety guard to prevent double execution on startup near cron time
+    private static final Duration MIN_INTERVAL = Duration.ofHours(23);
+    private LocalDateTime lastRunTime;
 
     private final PartnersRepository partnersRepository;
     private final com.grabit.cba.VendingMachineAlertService.database.repository.MerchantsRepository merchantsRepository;
@@ -45,16 +51,24 @@ public class HourlySalesBaselineScheduler {
         this.baselineRepository = baselineRepository;
     }
 
-    // run once a day to compute baselines
-    @Scheduled(cron = "${monitor.baselineCron:0 30 2 * * *}")
-//    @Scheduled(cron = "0 * * * * *")
-    @Transactional
-    public void computeBaseline() {
-        LOGGER.info("Hourly baseline job start for ALL partners");
+    private synchronized boolean canRunNow() {
+        if (lastRunTime == null) return true;
+        return Duration.between(lastRunTime, LocalDateTime.now()).compareTo(MIN_INTERVAL) > 0;
+    }
+
+    private void runBaselineJob(String trigger) {
+        LocalDateTime now = LocalDateTime.now();
+        if (!canRunNow()) {
+            LOGGER.warn("Skipping baseline job – already executed recently. trigger={} at {} lastRunTime={}", trigger, now, lastRunTime);
+            return;
+        }
+        lastRunTime = now;
+
+        LOGGER.info("Hourly baseline job triggered by {} at {}", trigger, now);
 
         // Fetch all partners (remove hardcoded filtering)
         List<Partners> partners = partnersRepository.findAll();
-        if (partners == null || partners.isEmpty()) {
+        if (partners.isEmpty()) {
             LOGGER.warn("No partners found in repository");
             return;
         }
@@ -92,6 +106,7 @@ public class HourlySalesBaselineScheduler {
             }
 
             // Defensive filtering: only keep VMs whose merchantId is in the resolved merchantIds
+            Set<Integer> merchantIdSet = new HashSet<>(merchantIds);
             List<VendingMachine> filteredVms = new ArrayList<>();
             for (VendingMachine vm : vms) {
                 Integer mid = vm.getMerchantId();
@@ -100,7 +115,7 @@ public class HourlySalesBaselineScheduler {
                     LOGGER.warn("Partner={} skipping VM id={} serial={} because merchantId is null", partnerName, vm.getId(), vm.getSerialNo());
                     continue;
                 }
-                if (!merchantIds.contains(mid)) {
+                if (!merchantIdSet.contains(mid)) {
                     LOGGER.warn("Partner={} skipping VM id={} serial={} because merchantId {} is not in resolved merchantIds {}", partnerName, vm.getId(), vm.getSerialNo(), mid, merchantIds);
                     continue;
                 }
@@ -145,7 +160,7 @@ public class HourlySalesBaselineScheduler {
                     double vmAvgVoidFailed = (double) voidFailedCounts[hour] / days;
 
                     Integer machineId = vm.getId();
-                    if (machineId == null || !vmRepository.findById(machineId).isPresent()) {
+                    if (machineId == null || vmRepository.findById(machineId).isEmpty()) {
                         LOGGER.warn("Partner={} skipping baseline save: VM id is invalid or missing (vmId={}, serial={})", partnerName, machineId, vm.getSerialNo());
                         continue;
                     }
@@ -163,6 +178,20 @@ public class HourlySalesBaselineScheduler {
             }
         }
 
-        LOGGER.info("Hourly baseline job end");
+        LOGGER.info("Hourly baseline job end at {}", LocalDateTime.now());
+    }
+
+    // run once a day to compute baselines
+    @Scheduled(cron = "${monitor.baseline.baselineCron:0 30 2 * * *}")
+    //    @Scheduled(cron = "0 * * * * *")
+    @Transactional
+    public void computeBaseline() {
+        runBaselineJob("SCHEDULED_CRON");
+    }
+
+    @EventListener(ApplicationReadyEvent.class)
+    @Transactional
+    public void runOnStartup() {
+        runBaselineJob("APPLICATION_STARTUP");
     }
 }

@@ -1,0 +1,9 @@
+server:
+  port: 6060
+  servlet:
+    context-path: /alert-service
+
+spring:
+  profiles:
+    active: prod
+

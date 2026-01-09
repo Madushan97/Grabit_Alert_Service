@@ -90,10 +90,10 @@ public class HourlyBaselineDropAlertScheduler {
         this.merchantsRepository = merchantsRepository;
     }
 
-    @Scheduled(cron = "${monitor.hourlyBaselineAlertCron:0 5 * * * *}")
+    @Scheduled(cron = "${monitor.hourly-baseline-alert.hourlyBaselineAlertCron:0 */5 * * * *}")
 //    @Scheduled(cron = "0 * * * * *")
     public void evaluateHourlyDrops() {
-        if (!monitorProperties.isHourlyBaselineAlertEnabled()) {
+        if (!monitorProperties.getHourlyBaselineAlert().isHourlyBaselineAlertEnabled()) {
             LOGGER.info("Hourly baseline drop alert disabled; skipping");
             return;
         }
@@ -105,8 +105,8 @@ public class HourlyBaselineDropAlertScheduler {
         final LocalDateTime prevWindowStart = windowStart.minusHours(1);
         final LocalDateTime prevWindowEndExclusive = windowStart.minusNanos(1);
         final int prevHourOfDay = (currentHour + 23) % 24; // previous hour within 0-23
-        final double threshold = monitorProperties.getBaselineDropThresholdPercent();
-        final int requiredConsecutive = Math.max(1, monitorProperties.getBaselineConsecutiveHoursRequired());
+        final double threshold = monitorProperties.getHourlyBaselineAlert().getBaselineDropThresholdPercent();
+        final int requiredConsecutive = Math.max(1, monitorProperties.getHourlyBaselineAlert().getBaselineConsecutiveHoursRequired());
 
         LOGGER.info("Hourly baseline drop evaluation start for hour {} ({} - {})", currentHour, windowStart, windowEnd);
 
@@ -226,7 +226,7 @@ public class HourlyBaselineDropAlertScheduler {
                 boolean withinCooldown = false;
                 if (lastHist.isPresent() && lastHist.get().getLastSentAt() != null) {
                     long minutes = java.time.Duration.between(lastHist.get().getLastSentAt(), now).toMinutes();
-                    withinCooldown = minutes < monitorProperties.getAlertCooldownMinutes();
+                    withinCooldown = minutes < monitorProperties.getHourlyBaselineAlert().getAlertCooldownMinutes();
                 }
                 if (!withinCooldown) {
                     rowsToAlert.add(r);

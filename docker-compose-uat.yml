@@ -1,0 +1,123 @@
+
+services:
+  app:
+    image: cbaitd/dev:VENMA_ES_UAT_V1.0.0
+    container_name: "vm-email-service-gen"
+    restart: unless-stopped
+    working_dir: /var/www
+    ports:
+      - "6000:8000"
+    networks:
+      - laravel
+    command: sh -c "composer install && php -S 0.0.0.0:8000 -t public"
+
+  vending-backend-gen:
+    image: cbaitgrabit/docker:VENMA_GEN_BE_UAT_V2.0.2_PRE_RELEASE_20260106
+    ports:
+      - 6500:5500
+      - 6501:5501
+      - 6502:5502
+    environment:
+      - FROM_DOCKER=1
+      - NODE_ENV=development
+      - DB_HOST=138.201.99.178
+      - DB_PORT=3306
+      - DB_UNAME=remote
+      - DB_PWORD=Layantha@193#
+      - DB_NAME=vendingdb_general
+      - LOG_PORT=24224
+      - LOG_HOST=vendingdb
+      - TZ=Asia/Colombo
+      #- VMM_EMAIL_API_HOST=http://138.201.99.178:8000
+      - SERVER_ENV=UAT
+      - SERVER_ENV_URL=http://138.201.99.178:6080/cba-vending
+      #- VMM_AASL_SALE_DATA_URL=https://pos.airport.lk:8005/dutyfreeposapi/salesController
+      - VMM_AASL_SALE_DATA_URL=https://pos.airport.lk:8005/monthlySaleAPI/salesController
+      - FILE_EXPORT_SERVICE_DIRECTORY=/app/reports
+
+      - FIREBASE_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC1YhYXFRmy+r1X\nW10yjH0Hs51JU3j6iVPfklPB0JnDRJx/IXGHamu4f8/IVMvVIEeT2siO5Yr/AJ3e\nHifG229camnU5+EhdjdL6U6p+Tr5erc7CX+k9PHkrmJRFeur8Rv1GhkHBvOs5n6o\nF3FhHd1/Nk/wP5i0cF9wFE7Ymjnbt5vVUd/NGY8CDIc6jWmcFfa4CPQGl2cAakdk\nRRJ+15/7B9lxMtG8/0afYEBmkMhaAs8FKFMor9eNtFmQIL8tz14B0Cghp9o4eBxB\n2FfrOsqFZkpIMb6kvrswq5Os5tziWTRvB8NdB1m5R/VkAnZNqIF+BHNR8yOjaSkZ\nSMjRKYdlAgMBAAECggEAH5nZM2hPs+kPd9rJH/duCRt3+cB7QVsPq9H4mbnYMDcR\n9OxEtU0LO3e5IbP0V0tqbQ4fBxZi4w6ecoZac8DjY/x+N8O2a3gHJkidleuAJNsG\ndViwTnMGecsQAgSJrMkzD77eQWUqqyL1Sh/bdwoW/wTdZIQP/M/fMM249u/XyLmn\nAdJJTVnQWLINFphoEq7mmerCkdW1gi0hqrhfmA+cuDcRlSEnB4EpP9TAruwxTvLY\nJ9Z8pOOLeHLE6q27YqfF7GMBPm5AvkRx6Ca4mf7/4UT0lCp1FV/HdrOj4zWAqhVH\nMlq1FPC6YQfpz53x94i9NjzIL9jqJchGVj7nnQNneQKBgQDvcilqnvCckRij4iSw\n0LNpfof5gxeeImOx9htoyfV+vu82KTc/6nCGYnVCbj5/JMyhyudNo3Hpibiyt/tR\nWQItn0F6GecRawoHGqh16wQTMS9iIjimSJMbQvRoJ09CJUPprQ3Z3BN+RHNKDz9+\n8dNad0Q/UPyzZ+tQW7gwbATjUwKBgQDB7EyTJH53bfv24bmZ1FTYoTEPZX50QQV3\nWFL0cpSgUcJphVqswerLKDN9PMZUnem99eazNJzZ4cN6xwwMHOzsfczWn93cNQgy\n6hlPiFEKdYNR8vcMnYeqXajxKf6nK0KNn+Ya1lXC7vjtWSlZQmRFDFsqcDwIUa28\nEzqjKKyLZwKBgQCVW/DZwSr1fsyP7ZBVetlvBK5sxYkF6w2lBI80XkX0OcWdUzhT\ndjmame/q8DmrtZivk5GUrE9yDaZYVMs/gvYI3z5Im7+27b3jkI1kgKSaFCQqYo5T\nqxGX/7vU/DBEYlpqeLgbHVxLdwczOy+wT8g2tg6sMChxAHGYPp42Fis2YQKBgGSJ\nlrWecPaIDd5T7n6DJ63b++xoiSPKZgQWxYM4ODfZy3obigQQ0SKcZ/1g2c4axIkY\niI+WEk+fjVIFCgjpoieFnQIUhdhZojOLTK4AFUvf2sJMvapLrX806ZaGWCDg+7Mj\nGBAH2RSkAmhDFn3RPtzRaB5ba7RAbFsaeQcH2lS3AoGBAOHx09dtghjYXB05Vil9\nPoG+xSUmItzWpDbgk2/yvRqO7ySfyz2/IDNEZn7q5WmEF6D0Rw0hzYq8M92HMyQ8\nT5QhUihT51bl1yaR7LhONh7mNqmE6T5bvhlof1PqrVGCdrWXgDpEDs/UjTOPOo5a\nSDZuhQbaADnDTD7I0YyDFO+K\n-----END PRIVATE KEY-----\n,
+      - FIREBASE_CLIENT_EMAIL=firebase-adminsdk-fbsvc@grabitflutterprototype-435a1.iam.gserviceaccount.com
+      - FIREBASE_PROJECT_ID=grabitflutterprototype-435a1
+      - GOOGLE_APPLICATION_CREDENTIALS=
+
+    container_name: "vm-backend-gen"
+    volumes:
+      - /home/vending-general/logs:/app/logs
+      - /home/vending-general/vmLogs:/app/vmLogs
+      - /home/vending-general/reports:/app/reports
+    restart: always
+
+  frontend-web-gen:
+    image: cbaitgrabit/docker:VENMA_GEN_FE_UAT_V2.0.2_PRE_RELEASE_20251231
+    ports:
+      - 6080:80
+    environment:
+      - REACT_APP_VERSION=1.0.4_20240907
+    container_name: "vm-frontend-gen"
+    restart: always
+
+  file-export:
+    image: cbaitd/vending-export-service:v1.0.0-cba
+    container_name: vending-export-service
+    ports:
+      - "6797:9797"
+    volumes:
+      - /home/vending-general/logs:/home/logs/FileExportService
+      - /home/vending-general/reports:/home/reports
+    environment:
+      - DB_HOST=138.201.99.178
+      - DB_PORT=3306
+      - DB_NAME=vending_general
+      - DB_USER=remote
+      - DB_PASSWORD=Layantha@193#
+      - FILE_EXPORT_CRON=0 * * * * ?
+      - CLEANUP_DIRECTORY=/home/reports
+      - CLEANUP_PERIOD=1
+      - CLEANUP_CRON=0 04 17 * * ?
+    restart: unless-stopped
+
+  alerting-service:
+    image: cbaitgrabit/docker:grabit_alerting_service_V1.0.0
+    container_name: alerting-service
+    volumes:
+      - /home/vending-general/alert-service/logs:/logs
+    ports:
+      - "6060:6060"
+    restart: unless-stopped
+    environment:
+      - DATABASE_HOST=138.201.99.178
+      - DATABASE_PORT=3306
+      - DATABASE_NAME=vendingdb_general
+      - DATABASE_USERNAME=remote
+      - DATABASE_PASSWORD="Layantha@193#"
+      - DDL_AUTO_METHOD=none
+
+      - SMTP_USERNAME=cba.wireme@gmail.com
+      - SMTP_PASSWORD=tdahitvmbpexfkpd
+      - SMTP_AUTH=true
+      - SMTP_STARTTLS=true
+
+      - FAILED_SALES_MONITOR_ENABLED=true
+      - FAILED_SALES_MONITOR_CRON=0 */5 * * * *
+      - FAILED_SALES_MONITOR_WINDOW_SIZE=10
+      - FAILED_SALES_MONITOR_FAILURE_THRESHOLD=3
+      - FAILED_SALES_MONITOR_ALERT_COOLDOWN_MINUTES=60
+      - FAILED_SALES_MONITOR_SLIDING_WINDOW_SIZE=10
+      - FAILED_SALES_MONITOR_SLIDING_FAILURE_THRESHOLD=5
+
+      - BASELINE_MONITOR_ENABLED=true
+      - BASELINE_MONITOR_CRON=0 30 2 * * *
+      - BASELINE_MONITOR_LOOKBACK_PERIOD_MONTHS=1
+
+      - HOURLY_BASELINE_ALERT_ENABLED=true
+      - HOURLY_BASELINE_ALERT_CRON=0 5 * * * *
+      - HOURLY_BASELINE_ALERT_DROP_THRESHOLD_PERCENT=0.30
+      - HOURLY_BASELINE_CONSECUTIVE_HOURS_REQUIRED=2
+
+networks:
+  laravel:
+    driver: bridge
+
+volumes:
+  dbdata:
+    driver: local
