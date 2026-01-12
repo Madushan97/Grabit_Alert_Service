@@ -26,4 +26,17 @@ public interface AlertHistoryRepository extends JpaRepository<AlertHistory, Inte
 
     @Query("SELECT ah FROM AlertHistory ah WHERE ah.vendingMachineSerial = :serial ORDER BY ah.lastSentAt DESC")
     Optional<AlertHistory> findLatestByVendingMachineSerial(@Param("serial") String vendingMachineSerial);
+
+    // Transaction-specific methods for individual alert tracking
+    @Query("SELECT ah FROM AlertHistory ah WHERE ah.transactionId = :transactionId ORDER BY ah.lastSentAt DESC")
+    Optional<AlertHistory> findLatestByTransactionId(@Param("transactionId") Integer transactionId);
+
+    @Query("SELECT ah FROM AlertHistory ah WHERE ah.transactionId = :transactionId AND ah.alertType.id = :alertTypeId ORDER BY ah.lastSentAt DESC")
+    Optional<AlertHistory> findLatestByTransactionIdAndAlertTypeId(@Param("transactionId") Integer transactionId, @Param("alertTypeId") Integer alertTypeId);
+
+    @Query("SELECT COUNT(ah) FROM AlertHistory ah WHERE ah.vendingMachineSerial = :serial AND ah.alertType.id = :alertTypeId AND ah.transactionId IS NOT NULL")
+    Long countTransactionAlertsBySerialAndAlertType(@Param("serial") String vendingMachineSerial, @Param("alertTypeId") Integer alertTypeId);
+
+    @Query("SELECT ah FROM AlertHistory ah WHERE ah.vendingMachineSerial = :serial AND ah.alertType.id = :alertTypeId AND ah.transactionId IS NOT NULL ORDER BY ah.lastSentAt DESC")
+    java.util.List<AlertHistory> findTransactionAlertsBySerialAndAlertType(@Param("serial") String vendingMachineSerial, @Param("alertTypeId") Integer alertTypeId);
 }

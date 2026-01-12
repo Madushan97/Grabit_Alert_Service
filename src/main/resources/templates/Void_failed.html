@@ -1,5 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional //EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.w3.org/1999/xhtml">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional //EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,29 +24,55 @@
                 <!-- Content -->
                 <tr>
                     <td style="padding: 20px;">
+                        <!-- Transaction Details -->
+                        <h2 style="margin: 0 0 20px 0; font-size: 18px; color: #dc3545;">Transaction Details</h2>
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border: 1px solid #ddd; border-collapse: collapse; margin-bottom: 20px;">
+                            <tr>
+                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Transaction ID</th>
+                                <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${transactionId}">[Transaction ID]</td>
+                            </tr>
+                            <tr>
+                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Transaction Date & Time</th>
+                                <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${transactionDateTime}">[Transaction DateTime]</td>
+                            </tr>
+                            <tr th:if="${transactionAmount}">
+                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Transaction Amount</th>
+                                <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${transactionAmount}">[Transaction Amount]</td>
+                            </tr>
+                            <tr th:if="${tranInvoiceNo}">
+                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Invoice Number</th>
+                                <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${tranInvoiceNo}">[Invoice No]</td>
+                            </tr>
+                            <tr th:if="${tranBatchNo}">
+                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Batch Number</th>
+                                <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${tranBatchNo}">[Batch No]</td>
+                            </tr>
+                        </table>
+
+                        <!-- Vending Machine Details -->
                         <h2 style="margin: 0 0 20px 0; font-size: 18px;">Vending Machine Details</h2>
                         <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border: 1px solid #ddd; border-collapse: collapse;">
                             <tr>
                                 <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Vending Serial Number</th>
                                 <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${vendingSerialNumber}">[VM Serial Number]</td>
                             </tr>
-                            <tr th:if="${vmName}">
+                            <tr>
                                 <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Vending Name</th>
                                 <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${vmName}">[VM Name]</td>
                             </tr>
-                            <tr th:if="${merchantName}">
+                            <tr>
                                 <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Merchant</th>
                                 <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${merchantName}">[Merchant]</td>
                             </tr>
-                            <tr th:if="${terminateCode}">
+                            <tr>
                                 <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Terminate Code</th>
                                 <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${terminateCode}">[Terminate Code]</td>
                             </tr>
-                            <tr th:if="${productLockCount}">
+                            <tr>
                                 <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Product Lock Count</th>
                                 <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${productLockCount}">[Product Lock Count]</td>
                             </tr>
-                            <tr th:if="${location}">
+                            <tr>
                                 <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Location</th>
                                 <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${location}">[Location]</td>
                             </tr>
@@ -52,11 +80,11 @@
 
                         <!-- Alert Information -->
                         <div style="margin-top: 20px;">
-                            <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #dc3545;">Void Transaction Failure Details</h3>
+                            <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #dc3545;">Alert Information</h3>
                             <ul style="margin: 0 0 20px 20px;">
-                                <li><strong>Void Failed Count:</strong> <span th:text="${voidFailedCount}">[voidFailedCount]</span></li>
-                                <li th:if="${lastFailureTimeFormatted}"><strong>Last Failure Time:</strong> <span th:text="${lastFailureTimeFormatted}">[lastFailureTime]</span></li>
-                                <li><strong>Alert Generated:</strong> <span th:text="${#dates.format(#dates.createNow(), 'yyyy-MM-dd HH:mm:ss')}">[alertGenerated]</span></li>
+                                <li><strong>Alert Generated:</strong> <span th:text="${#dates.format(#dates.createNow(), 'yyyy-MM-dd HH:mm:ss')}">[Alert Time]</span></li>
+                                <li><strong>Alert Type:</strong> Void Transaction Failed</li>
+                                <li><strong>Severity:</strong> Critical</li>
                             </ul>
                         </div>
 
@@ -64,16 +92,17 @@
                         <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
                             <h3 style="color: #856404; margin-top: 0;">Recommended Actions</h3>
                             <ul style="margin: 0; padding-left: 20px;">
+                                <li>Investigate the specific transaction that failed to void</li>
                                 <li>Check machine connectivity and payment system status</li>
                                 <li>Verify network connection to payment gateway</li>
-                                <li>Inspect machine for physical issues or error messages</li>
+                                <li>Review transaction logs for additional details</li>
+                                <li>Process manual refund if required</li>
                                 <li>Contact technical support if the issue persists</li>
-                                <li>Monitor the machine closely for additional failures</li>
                             </ul>
                         </div>
 
                         <p style="color: #333; margin-top: 0; font-size: 14px; text-align: justify;">
-                            A void transaction has failed on the vending machine shown above. This indicates a critical issue that requires immediate attention to prevent potential revenue loss and customer dissatisfaction.
+                            A void transaction has failed on the vending machine shown above. This indicates a critical issue that may require manual review and potential refund processing. Immediate attention is required to prevent customer dissatisfaction and ensure proper financial reconciliation.
                         </p>
                     </td>
                 </tr>

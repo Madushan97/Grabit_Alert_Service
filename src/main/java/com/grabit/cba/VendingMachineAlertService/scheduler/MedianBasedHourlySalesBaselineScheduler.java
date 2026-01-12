@@ -42,6 +42,19 @@ public class MedianBasedHourlySalesBaselineScheduler {
     private final SalesRepository salesRepository;
     private final AlertHourlySalesBaselineRepository baselineRepository;
 
+
+//    @Scheduled(cron = "${monitor.baseline.baselineCron:0 30 2 * * *}")
+    @Transactional
+    public void computeBaseline() {
+        runBaselineJob("SCHEDULED_CRON");
+    }
+
+    @EventListener(ApplicationReadyEvent.class)
+    @Transactional
+    public void runOnStartup() {
+        runBaselineJob("APPLICATION_STARTUP");
+    }
+
     public MedianBasedHourlySalesBaselineScheduler(PartnersRepository partnersRepository,
                                                    com.grabit.cba.VendingMachineAlertService.database.repository.MerchantsRepository merchantsRepository,
                                                    VMRepository vmRepository, SalesRepository salesRepository, AlertHourlySalesBaselineRepository baselineRepository) {
@@ -188,19 +201,6 @@ public class MedianBasedHourlySalesBaselineScheduler {
         LOGGER.info("Hourly baseline job end at {}", LocalDateTime.now());
     }
 
-    // run once a day to compute baselines
-    @Scheduled(cron = "${monitor.baseline.baselineCron:0 30 2 * * *}")
-    //    @Scheduled(cron = "0 * * * * *")
-    @Transactional
-    public void computeBaseline() {
-        runBaselineJob("SCHEDULED_CRON");
-    }
-
-    @EventListener(ApplicationReadyEvent.class)
-    @Transactional
-    public void runOnStartup() {
-        runBaselineJob("APPLICATION_STARTUP");
-    }
 
     /**
      * Calculate median from daily counts for a specific hour.

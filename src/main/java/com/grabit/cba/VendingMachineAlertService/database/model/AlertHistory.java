@@ -22,6 +22,10 @@ public class AlertHistory {
     @Column(name = "vendingMachineSerial")
     private String vendingMachineSerial;
 
+    // store transaction ID for individual transaction alerts (e.g., void failed transactions)
+    @Column(name = "transactionId", nullable = true)
+    private Integer transactionId;
+
     // store the send time with microsecond precision
     @Column(name = "lastSentAt", columnDefinition = "datetime(6)")
     private LocalDateTime lastSentAt;
