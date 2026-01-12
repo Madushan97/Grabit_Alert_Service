@@ -14,6 +14,7 @@ public class AllMachinesMonitorProperties {
     private FailedSales failedSales = new FailedSales();
     private Baseline baseline = new Baseline();
     private HourlyBaselineAlert hourlyBaselineAlert = new HourlyBaselineAlert();
+    private VoidFailed voidFailed = new VoidFailed();
 
     @Data
     public static class FailedSales {
@@ -39,6 +40,14 @@ public class AllMachinesMonitorProperties {
         private String hourlyBaselineAlertCron = "0 5 * * * *";
         private double baselineDropThresholdPercent = 0.30;
         private int baselineConsecutiveHoursRequired = 2;
+        private int alertCooldownMinutes = 60;
+    }
+
+    @Data
+    public static class VoidFailed {
+        private boolean voidFailedEnabled = true;
+        private String voidFailedCron = "0 */5 * * * *";
+        private int voidFailureThreshold = 5;
         private int alertCooldownMinutes = 60;
     }
 
