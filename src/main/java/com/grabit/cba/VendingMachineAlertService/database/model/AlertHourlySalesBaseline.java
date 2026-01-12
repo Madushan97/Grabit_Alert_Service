@@ -31,17 +31,19 @@ public class AlertHourlySalesBaseline {
     @EmbeddedId
     private Id id;
 
-    @Column(name = "avgSalesCompleted")
-    private Double avgSalesCompleted;
+    // NOTE: Despite the column name "avgSalesCompleted", this field now stores
+    // MEDIAN values (not average) for better outlier resistance
+    @Column(name = "medianSalesCompleted")
+    private Double medianSalesCompleted;
 
-    @Column(name = "avgSalesFailed")
-    private Double avgSalesFailed;
+    @Column(name = "medianSalesFailed")
+    private Double medianSalesFailed;
 
-    @Column(name = "avgVoidCompleted")
-    private Double avgVoidCompleted;
+    @Column(name = "medianVoidCompleted")
+    private Double medianVoidCompleted;
 
-    @Column(name = "avgVoidFailed")
-    private Double avgVoidFailed;
+    @Column(name = "medianVoidFailed")
+    private Double medianVoidFailed;
 
     @Column(name = "updated_at", columnDefinition = "datetime(6)")
     private LocalDateTime updatedAt;

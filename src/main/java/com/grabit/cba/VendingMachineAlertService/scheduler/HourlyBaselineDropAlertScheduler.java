@@ -161,8 +161,9 @@ public class HourlyBaselineDropAlertScheduler {
                 if (curBaselineOpt.isEmpty()) continue; // no baseline
                 AlertHourlySalesBaseline curBaseline = curBaselineOpt.get();
 
-                // Baseline eligibility: avgSalesCompleted must be >= 1.0
-                Double baselineCompleted = curBaseline.getAvgSalesCompleted();
+                // Baseline eligibility: medianSalesCompleted must be >= 1.0
+                // (Note: field is named avgSalesCompleted but contains median values)
+                Double baselineCompleted = curBaseline.getMedianSalesCompleted(); // actually median
                 if (baselineCompleted == null || baselineCompleted < 1.0) continue;
 
                 // Current hour sales window counts
@@ -185,7 +186,7 @@ public class HourlyBaselineDropAlertScheduler {
                     Optional<AlertHourlySalesBaseline> prevBaselineOpt = baselineRepository.findById(prevId);
                     if (prevBaselineOpt.isPresent()) {
                         AlertHourlySalesBaseline prevBaseline = prevBaselineOpt.get();
-                        Double prevBaselineCompleted = prevBaseline.getAvgSalesCompleted();
+                        Double prevBaselineCompleted = prevBaseline.getMedianSalesCompleted(); // actually median
                         if (prevBaselineCompleted != null && prevBaselineCompleted >= 1.0) {
                             List<Sales> prevHourSales = salesRepository.findByMachineSerialAndDateBetween(vm.getSerialNo(), prevWindowStart, prevWindowEndExclusive);
                             long prevCompleted = prevHourSales.stream().filter(s -> "SALE_COMPLETED".equalsIgnoreCase(String.valueOf(s.getTransactionStatus()))).count();

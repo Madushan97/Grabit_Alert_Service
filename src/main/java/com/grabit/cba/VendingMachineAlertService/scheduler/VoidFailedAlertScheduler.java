@@ -21,8 +21,8 @@ public class VoidFailedAlertScheduler {
 
     @Scheduled(cron = "${monitor.void-failed.voidFailedCron:0 */5 * * * *}")
     public void checkingVoidFailedTransactions() {
-        LOGGER.info("Cron start: Void Failed Health Monitor");
+        LOGGER.info("Void failed Cron start: Void Failed Health Monitor");
         voidFailedHealthMonitorService.evaluateAllMachines();
-        LOGGER.info("Cron end: Void Failed Health Monitor");
+        LOGGER.info("Void failed Cron end: Void Failed Health Monitor");
     }
 }

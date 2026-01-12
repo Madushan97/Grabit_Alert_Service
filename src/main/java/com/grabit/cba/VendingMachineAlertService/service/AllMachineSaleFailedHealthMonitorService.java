@@ -229,10 +229,10 @@ public class AllMachineSaleFailedHealthMonitorService {
             last = alertHistoryRepository.findLatestByVendingMachineSerialAndAlertTypeId(serialNo, alertTypeId);
             LOGGER.info("Checking AlertHistory by vendingMachineSerial='{}', alertTypeId={}", serialNo, alertTypeId);
         }
-        if (last.isEmpty()) {
-            last = alertHistoryRepository.findLatestByVendingMachineSerial(serialNo);
-            LOGGER.info("Fallback: checking any AlertHistory by vendingMachineSerial='{}'", serialNo);
-        }
+//        if (last.isEmpty()) {
+//            last = alertHistoryRepository.findLatestByVendingMachineSerial(serialNo);
+//            LOGGER.info("Fallback: checking any AlertHistory by vendingMachineSerial='{}'", serialNo);
+//        }
         if (last.isPresent()) {
             java.time.LocalDateTime lastSent = last.get().getLastSentAt();
             if (lastSent != null) {

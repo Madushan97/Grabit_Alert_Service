@@ -19,17 +19,18 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Component
-public class HourlySalesBaselineScheduler {
+public class MedianBasedHourlySalesBaselineScheduler {
 
     @Value("${monitor.baseline.lookback-period-months}")
     private Integer lookbackPeriodsMonths;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(HourlySalesBaselineScheduler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MedianBasedHourlySalesBaselineScheduler.class);
 
     // Optional safety guard to prevent double execution on startup near cron time
     private static final Duration MIN_INTERVAL = Duration.ofHours(23);
@@ -41,9 +42,9 @@ public class HourlySalesBaselineScheduler {
     private final SalesRepository salesRepository;
     private final AlertHourlySalesBaselineRepository baselineRepository;
 
-    public HourlySalesBaselineScheduler(PartnersRepository partnersRepository,
-                                       com.grabit.cba.VendingMachineAlertService.database.repository.MerchantsRepository merchantsRepository,
-                                       VMRepository vmRepository, SalesRepository salesRepository, AlertHourlySalesBaselineRepository baselineRepository) {
+    public MedianBasedHourlySalesBaselineScheduler(PartnersRepository partnersRepository,
+                                                   com.grabit.cba.VendingMachineAlertService.database.repository.MerchantsRepository merchantsRepository,
+                                                   VMRepository vmRepository, SalesRepository salesRepository, AlertHourlySalesBaselineRepository baselineRepository) {
         this.partnersRepository = partnersRepository;
         this.merchantsRepository = merchantsRepository;
         this.vmRepository = vmRepository;
@@ -76,8 +77,6 @@ public class HourlySalesBaselineScheduler {
         // Define period once: last N months
         LocalDateTime end = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS);
         LocalDateTime start = end.minusMonths(lookbackPeriodsMonths);
-        long days = ChronoUnit.DAYS.between(start.toLocalDate().atStartOfDay(), end.toLocalDate().atStartOfDay());
-        if (days <= 0) days = 1;
 
         // Iterate per partner and evaluate baseline per machine without changing baseline logic
         for (Partners partner : partners) {
@@ -132,21 +131,29 @@ public class HourlySalesBaselineScheduler {
             for (VendingMachine vm : vms) {
                 List<Sales> sales = salesRepository.findByMachineSerialAndDateBetween(vm.getSerialNo(), start, end);
 
-                // initialize counters per hour
-                long[] successCounts = new long[24];
-                long[] failedCounts = new long[24];
-                long[] voidCompletedCounts = new long[24];
-                long[] voidFailedCounts = new long[24];
+                // Build daily counters per hour (to calculate median instead of average)
+                Map<LocalDate, long[]> dailySuccessCounts = new HashMap<>();
+                Map<LocalDate, long[]> dailyFailedCounts = new HashMap<>();
+                Map<LocalDate, long[]> dailyVoidCompletedCounts = new HashMap<>();
+                Map<LocalDate, long[]> dailyVoidFailedCounts = new HashMap<>();
 
                 for (Sales s : sales) {
                     if (s.getDateTime() == null) continue;
+                    LocalDate day = s.getDateTime().toLocalDate();
                     int h = s.getDateTime().getHour();
                     String status = s.getTransactionStatus() == null ? "" : s.getTransactionStatus().toUpperCase();
+
+                    // Initialize arrays if needed
+                    dailySuccessCounts.computeIfAbsent(day, k -> new long[24]);
+                    dailyFailedCounts.computeIfAbsent(day, k -> new long[24]);
+                    dailyVoidCompletedCounts.computeIfAbsent(day, k -> new long[24]);
+                    dailyVoidFailedCounts.computeIfAbsent(day, k -> new long[24]);
+
                     switch (status) {
-                        case "SALE_COMPLETED": successCounts[h]++; break;
-                        case "SALE_FAILED": failedCounts[h]++; break;
-                        case "VOID_COMPLETE": voidCompletedCounts[h]++; break;
-                        case "VOID_FAILED": voidFailedCounts[h]++; break;
+                        case "SALE_COMPLETED": dailySuccessCounts.get(day)[h]++; break;
+                        case "SALE_FAILED": dailyFailedCounts.get(day)[h]++; break;
+                        case "VOID_COMPLETE": dailyVoidCompletedCounts.get(day)[h]++; break;
+                        case "VOID_FAILED": dailyVoidFailedCounts.get(day)[h]++; break;
                         default: break;
                     }
                 }
@@ -154,23 +161,23 @@ public class HourlySalesBaselineScheduler {
                 // Save baseline per hour for this machine
                 for (int hour = 0; hour < 24; hour++) {
 
-                    double vmAvgSuccess = (double) successCounts[hour] / days;
-                    double vmAvgFailed = (double) failedCounts[hour] / days;
-                    double vmAvgVoidCompleted = (double) voidCompletedCounts[hour] / days;
-                    double vmAvgVoidFailed = (double) voidFailedCounts[hour] / days;
+                    double vmMedianSuccess = calculateMedian(dailySuccessCounts, hour);
+                    double vmMedianFailed = calculateMedian(dailyFailedCounts, hour);
+                    double vmMedianVoidCompleted = calculateMedian(dailyVoidCompletedCounts, hour);
+                    double vmMedianVoidFailed = calculateMedian(dailyVoidFailedCounts, hour);
 
                     Integer machineId = vm.getId();
-                    if (machineId == null || vmRepository.findById(machineId).isEmpty()) {
+                    if (machineId == null) {
                         LOGGER.warn("Partner={} skipping baseline save: VM id is invalid or missing (vmId={}, serial={})", partnerName, machineId, vm.getSerialNo());
                         continue;
                     }
                     Id key = new Id(machineId, hour);
                     AlertHourlySalesBaseline baseline = new AlertHourlySalesBaseline();
                     baseline.setId(key);
-                    baseline.setAvgSalesCompleted(vmAvgSuccess);
-                    baseline.setAvgSalesFailed(vmAvgFailed);
-                    baseline.setAvgVoidCompleted(vmAvgVoidCompleted);
-                    baseline.setAvgVoidFailed(vmAvgVoidFailed);
+                    baseline.setMedianSalesCompleted(vmMedianSuccess);
+                    baseline.setMedianSalesFailed(vmMedianFailed);
+                    baseline.setMedianVoidCompleted(vmMedianVoidCompleted);
+                    baseline.setMedianVoidFailed(vmMedianVoidFailed);
                     baseline.setUpdatedAt(LocalDateTime.now());
                     baselineRepository.save(baseline);
                 }
@@ -193,5 +200,38 @@ public class HourlySalesBaselineScheduler {
     @Transactional
     public void runOnStartup() {
         runBaselineJob("APPLICATION_STARTUP");
+    }
+
+    /**
+     * Calculate median from daily counts for a specific hour.
+     * This is more robust against outliers than average.
+     *
+     * @param dailyCounts Map of date -> daily count array [24 hours]
+     * @param hour The hour of day (0-23) to calculate median for
+     * @return median value for the given hour across all days
+     */
+    private double calculateMedian(Map<LocalDate, long[]> dailyCounts, int hour) {
+        List<Long> values = new ArrayList<>();
+
+        // Extract all daily counts for this specific hour
+        for (long[] dailyHourCounts : dailyCounts.values()) {
+            values.add(dailyHourCounts[hour]);
+        }
+
+        if (values.isEmpty()) {
+            return 0.0;
+        }
+
+        // Sort values to find median
+        Collections.sort(values);
+        int size = values.size();
+
+        if (size % 2 == 0) {
+            // Even number of values: average of two middle values
+            return (values.get(size / 2 - 1) + values.get(size / 2)) / 2.0;
+        } else {
+            // Odd number of values: middle value
+            return values.get(size / 2);
+        }
     }
 }
