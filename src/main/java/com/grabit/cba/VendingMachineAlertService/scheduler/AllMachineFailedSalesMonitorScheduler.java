@@ -23,7 +23,7 @@ public class AllMachineFailedSalesMonitorScheduler {
         this.allMachineSaleFailedHealthMonitorService = allMachineSaleFailedHealthMonitorService;
     }
 
-//    @Scheduled(cron = "${monitor.failed-sales.cron:0 */5 * * * *}")
+    @Scheduled(cron = "${monitor.failed-sales.cron:0 */5 * * * *}")
     public void runCron() {
         LOGGER.info("Failed sales Cron start: Machine health monitor");
         allMachineSaleFailedHealthMonitorService.evaluateAllMachines();

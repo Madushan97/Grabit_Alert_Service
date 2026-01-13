@@ -51,5 +51,12 @@ monitor:
     baselineDropThresholdPercent: ${HOURLY_BASELINE_ALERT_DROP_THRESHOLD_PERCENT}
     alertCooldownMinutes: ${HOURLY_BASELINE_ALERT_COOLDOWN_MINUTES}
 
+  void-failed:
+    voidFailedEnabled: ${VOID_FAILED_ENABLED}
+    alertCooldownMinutes: ${VOID_FAILED_ALERT_COOLDOWN_MINUTES}
+    voidFailureThreshold: ${VOID_FAILED_FAILURE_THRESHOLD}
+    voidFailedCron: ${VOID_FAILED_CRON}
+
+
 
 

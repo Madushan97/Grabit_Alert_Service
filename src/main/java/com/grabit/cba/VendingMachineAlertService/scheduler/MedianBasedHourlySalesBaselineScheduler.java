@@ -43,7 +43,7 @@ public class MedianBasedHourlySalesBaselineScheduler {
     private final AlertHourlySalesBaselineRepository baselineRepository;
 
 
-//    @Scheduled(cron = "${monitor.baseline.baselineCron:0 30 2 * * *}")
+    @Scheduled(cron = "${monitor.baseline.baselineCron:0 30 2 * * *}")
     @Transactional
     public void computeBaseline() {
         runBaselineJob("SCHEDULED_CRON");

@@ -90,7 +90,7 @@ public class HourlyBaselineDropAlertScheduler {
         this.merchantsRepository = merchantsRepository;
     }
 
-//    @Scheduled(cron = "${monitor.hourly-baseline-alert.hourlyBaselineAlertCron:0 55 * * * *}")
+    @Scheduled(cron = "${monitor.hourly-baseline-alert.hourlyBaselineAlertCron:0 55 * * * *}")
     public void evaluateHourlyDrops() {
         if (!monitorProperties.getHourlyBaselineAlert().isHourlyBaselineAlertEnabled()) {
             LOGGER.info("Hourly baseline drop alert disabled; skipping");
