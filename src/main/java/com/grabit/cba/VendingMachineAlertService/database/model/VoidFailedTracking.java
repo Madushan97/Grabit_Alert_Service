@@ -17,18 +17,18 @@ public class VoidFailedTracking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "vending_machine_serial", nullable = false, unique = true)
+    @Column(name = "vendingMachineSerial", nullable = false, unique = true)
     private String vendingMachineSerial;
 
-    @Column(name = "last_checked_transaction_id")
+    @Column(name = "lastCheckedTransactionId")
     private Integer lastCheckedTransactionId;
 
-    @Column(name = "last_checked_datetime")
+    @Column(name = "lastCheckedDatetime")
     private LocalDateTime lastCheckedDatetime;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @Column(name = "createdAt", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", insertable = false, updatable = false)
+    @Column(name = "updatedAt", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 }

@@ -1,5 +1,3 @@
--- Flyway Migration: Create Alert_Hourly_Sales_Baseline table
--- Matches com.grabit.cba.VendingMachineAlertService.database.model.AlertHourlySalesBaseline
 
 CREATE TABLE IF NOT EXISTS Alert_Hourly_Sales_Baseline (
   machineId INT NOT NULL,

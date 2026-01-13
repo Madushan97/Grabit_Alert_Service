@@ -163,7 +163,7 @@ public class HourlyBaselineDropAlertScheduler {
                 // Baseline eligibility: medianSalesCompleted must be >= 1.0
                 // (Note: field is named avgSalesCompleted but contains median values)
                 Double baselineCompleted = curBaseline.getMedianSalesCompleted(); // actually median
-                if (baselineCompleted == null || baselineCompleted < 1.0) continue;
+                if (baselineCompleted == null || baselineCompleted < 1.0) continue;     // Median baseline too low to evaluate
 
                 // Current hour sales window counts
                 List<Sales> lastHour = salesRepository.findByMachineSerialAndDateBetween(vm.getSerialNo(), windowStart, endExclusive);
@@ -282,11 +282,11 @@ public class HourlyBaselineDropAlertScheduler {
                 try {
                     sent = emailSender.sendEmail(mail, null, null);
                 } catch (Exception ex) {
-                    LOGGER.error("Partner={} email send failed: {}", partnerName, ex.getMessage(), ex);
+                    LOGGER.error("Partner={} baseline drop email send failed: {}", partnerName, ex.getMessage(), ex);
                     sent = false;
                 }
                 if (!sent) {
-                    LOGGER.warn("Partner={} email not sent; skipping AlertHistory upsert", partnerName);
+                    LOGGER.warn("Partner={} baseline drop email not sent; skipping AlertHistory upsert", partnerName);
                     continue;
                 }
                 String timestamp = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));

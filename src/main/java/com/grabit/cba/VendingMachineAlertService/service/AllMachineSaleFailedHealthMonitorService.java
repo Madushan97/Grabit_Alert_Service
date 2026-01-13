@@ -301,7 +301,7 @@ public class AllMachineSaleFailedHealthMonitorService {
         props.put("detectedIssues", detectedIssues);
 
         // format lastFailureTime as a human-readable string with microsecond precision
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS");
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         String lastFailureTimeFormatted = lastFailureTime == null ? null : lastFailureTime.atZone(ZoneId.systemDefault()).format(dtf);
         props.put("lastFailureTimeFormatted", lastFailureTimeFormatted);
 
@@ -361,12 +361,12 @@ public class AllMachineSaleFailedHealthMonitorService {
             String htmlBody = templateEngine.process("Sale_failed", context);
             mailDto.setBody(htmlBody);
 
-            boolean emailSent = emailSender.sendEmail(mailDto, grabitLogo, null);
+            boolean emailSent = emailSender.sendEmail(mailDto, null, null);
             if (emailSent) {
                 String partnerNameLog = machinePartner != null ? machinePartner.getName() : "UNKNOWN";
                 String toLog = (toAddrs != null && toAddrs.length > 0) ? String.join(",", toAddrs) : "<none>";
-                LOGGER.info("Email has been sent at {} to partner {} email {}", java.time.LocalDateTime.now(java.time.ZoneId.systemDefault()), partnerNameLog, toLog);
-                LOGGER.info("Alert email sent for machine {} (consecutiveFailures={}, failuresInWindow={})", serialNo, consecutiveFailures, failuresInWindow);
+                LOGGER.info("Sale Failed Email has been sent at {} to partner {} email {}", java.time.LocalDateTime.now(java.time.ZoneId.systemDefault()), partnerNameLog, toLog);
+                LOGGER.info("Sale Failed Alert email sent for machine {} (consecutiveFailures={}, failuresInWindow={})", serialNo, consecutiveFailures, failuresInWindow);
 
                 // persist/update AlertHistory ONLY if email was sent successfully
                 java.time.LocalDateTime sendTime = java.time.LocalDateTime.now(ZoneId.systemDefault());
@@ -398,10 +398,10 @@ public class AllMachineSaleFailedHealthMonitorService {
 
                 unhealthyMachinesLastFailure.put(serialNo, lastFailureTime);
             } else {
-                LOGGER.warn("Email send returned false for machine {}; skipping AlertHistory persist", serialNo);
+                LOGGER.warn("Sale Failed Email send returned false for machine {}; skipping AlertHistory persist", serialNo);
             }
         } catch (Exception e) {
-            LOGGER.error("Failed to send alert email for machine {}: {}", serialNo, e.getMessage(), e);
+            LOGGER.error("Failed to send Sale Failed alert email for machine {}: {}", serialNo, e.getMessage(), e);
         }
     }
 }

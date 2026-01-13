@@ -15,4 +15,7 @@ public interface VMRepository extends JpaRepository<VendingMachine,Integer> {
 
     @Query("SELECT vm FROM VendingMachine vm WHERE vm.merchantId IN :merchantIds AND (vm.isDeleted IS NULL OR vm.isDeleted = false) AND vm.status = 1")
     List<VendingMachine> findActiveByMerchantIds(@Param("merchantIds") List<Integer> merchantIds);
+
+    @Query("SELECT vm FROM VendingMachine vm WHERE vm.merchantId IN :merchantIds AND (vm.isDeleted IS NULL OR vm.isDeleted = false) AND vm.status = 0")
+    List<VendingMachine> findOfflineByMerchantIds(@Param("merchantIds") List<Integer> merchantIds);
 }

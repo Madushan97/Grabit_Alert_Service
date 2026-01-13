@@ -29,7 +29,7 @@ public class AlertType {
     private String description;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Severity severity;
 
     @OneToMany(mappedBy = "alertType", fetch = FetchType.LAZY)

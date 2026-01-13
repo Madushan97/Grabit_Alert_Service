@@ -4,7 +4,6 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.List;
 
 @Configuration
 @ConfigurationProperties(prefix = "monitor")
@@ -15,6 +14,7 @@ public class AllMachinesMonitorProperties {
     private Baseline baseline = new Baseline();
     private HourlyBaselineAlert hourlyBaselineAlert = new HourlyBaselineAlert();
     private VoidFailed voidFailed = new VoidFailed();
+    private HeartbeatMonitor heartbeatMonitor = new HeartbeatMonitor();
 
     @Data
     public static class FailedSales {
@@ -49,6 +49,14 @@ public class AllMachinesMonitorProperties {
         private String voidFailedCron = "0 */5 * * * *";
         private int voidFailureThreshold = 5;
         private int alertCooldownMinutes = 60;
+    }
+
+    @Data
+    public static class HeartbeatMonitor {
+        private boolean enabled = true;
+        private String cron = "0 */10 * * * *"; // every 10 minutes
+        private int offlineMachineThresholdMinutes = 120; // alert if offline machine stays offline for 120+ minutes (2 hours)
+        private int alertCooldownMinutes = 60; // cooldown between alerts
     }
 
 }

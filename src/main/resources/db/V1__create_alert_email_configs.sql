@@ -1,5 +1,3 @@
--- Flyway Migration: Create Alert_Email_Configs table
--- Matches com.grabit.cba.VendingMachineAlertService.database.model.AlertEmailConfig
 
 CREATE TABLE IF NOT EXISTS Alert_Email_Configs (
   id INT AUTO_INCREMENT PRIMARY KEY,
