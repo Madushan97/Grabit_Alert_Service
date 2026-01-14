@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -140,7 +141,7 @@ public class TimeoutMonitorService {
         int windowSize = allMachinesMonitorProperties.getTimeout().getTimeoutMonitoringTransactionWindowSize();
 
         // Get recent transactions for analysis
-        List<Sales> recentTransactions = salesRepository.findLatestByMachineSerial(serialNo, PageRequest.of(0, windowSize));
+        List<Sales> recentTransactions = salesRepository.findLatestByMachineSerial(serialNo, PageRequest.of(0, windowSize, Sort.by(Sort.Direction.DESC, "dateTime", "id")));
         if (recentTransactions == null || recentTransactions.isEmpty()) {
             LOGGER.debug("No transactions found for machine {}; skipping timeout pattern evaluation", serialNo);
             return;
@@ -299,9 +300,14 @@ public class TimeoutMonitorService {
         props.put("totalTransactions", analysis.getTotalTransactions());
         props.put("timeoutCount", analysis.getTimeoutCount());
         props.put("maxConsecutiveTimeouts", analysis.getMaxConsecutiveTimeouts());
+        props.put("consecutiveTimeoutCount", analysis.getMaxConsecutiveTimeouts()); // For template consistency
         props.put("timeoutPercentage", String.format("%.1f", analysis.getTimeoutPercentage()));
         props.put("thresholdConsecutive", allMachinesMonitorProperties.getTimeout().getTimeoutMonitoringConsecutiveTimeoutThreshold());
         props.put("thresholdPercentage", String.format("%.1f", allMachinesMonitorProperties.getTimeout().getTimeoutMonitoringTimeoutPercentageThreshold()));
+
+        // Add VM specific fields
+        props.put("terminateCode", vm.getTerminateCode() != null ? vm.getTerminateCode() : 0);
+        props.put("productLockCount", vm.getProductLockCount() != null ? vm.getProductLockCount() : 0);
 
         // Get merchant information
         String merchantName = null;

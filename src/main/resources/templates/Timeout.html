@@ -1,0 +1,126 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional //EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="x-apple-disable-message-reformatting">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Consecutive Timeout Alert</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f4f4; font-family: 'Roboto', sans-serif; color: #333;">
+<table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; margin: 0; padding: 0;">
+    <tr>
+        <td align="center" valign="top">
+            <!-- Email Container -->
+            <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);">
+                <!-- Header -->
+                <tr>
+                    <td style="background-color: #dc3545; color: white; padding: 20px; text-align: center; border-top-left-radius: 8px; border-top-right-radius: 8px;">
+                        <h1 style="margin: 0; font-size: 24px;">Consecutive Timeout Alert</h1>
+                    </td>
+                </tr>
+                <!-- Content -->
+                <tr>
+                    <td style="padding: 20px;">
+                        <!-- Alert Details -->
+                        <h2 style="margin: 0 0 20px 0; font-size: 18px; color: #dc3545;">Alert Details</h2>
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border: 1px solid #ddd; border-collapse: collapse; margin-bottom: 20px;">
+                            <tr>
+                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Consecutive Timeout Count</th>
+                                <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${consecutiveTimeoutCount}">[Consecutive Timeout Count]</td>
+                            </tr>
+                            <tr>
+                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Total Transactions Analyzed</th>
+                                <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${totalTransactions}">[Total Transactions]</td>
+                            </tr>
+                            <tr>
+                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Total Timeout Transactions</th>
+                                <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${timeoutCount}">[Timeout Count]</td>
+                            </tr>
+                            <tr>
+                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Timeout Percentage</th>
+                                <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${timeoutPercentage + '%'}">[Timeout Percentage]</td>
+                            </tr>
+                            <tr>
+                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Alert Generated</th>
+                                <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${#dates.format(#dates.createNow(), 'yyyy-MM-dd HH:mm:ss')}">[Alert Time]</td>
+                            </tr>
+                            <tr>
+                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Alert Status</th>
+                                <td style="padding: 12px; border-bottom: 1px solid #ddd;">High Consecutive Timeout Count</td>
+                            </tr>
+                        </table>
+
+                        <!-- Vending Machine Details -->
+                        <h2 style="margin: 0 0 20px 0; font-size: 18px;">Vending Machine Details</h2>
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border: 1px solid #ddd; border-collapse: collapse;">
+                            <tr>
+                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Vending Serial Number</th>
+                                <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${vendingSerialNumber}">[VM Serial Number]</td>
+                            </tr>
+                            <tr>
+                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Vending Name</th>
+                                <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${vmName}">[VM Name]</td>
+                            </tr>
+                            <tr>
+                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Merchant</th>
+                                <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${merchantName}">[Merchant]</td>
+                            </tr>
+                            <tr>
+                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Terminate Code</th>
+                                <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${terminateCode}">[Terminate Code]</td>
+                            </tr>
+                            <tr>
+                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Product Lock Count</th>
+                                <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${productLockCount}">[Product Lock Count]</td>
+                            </tr>
+                            <tr>
+                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Location</th>
+                                <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${location}">[Location]</td>
+                            </tr>
+                        </table>
+
+                        <!-- Alert Information -->
+                        <div style="margin-top: 20px;">
+                            <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #dc3545;">Alert Information</h3>
+                            <ul style="margin: 0 0 20px 20px;">
+                                <li><strong>Alert Type:</strong> Consecutive Timeout Transactions</li>
+                                <li><strong>Severity:</strong> High</li>
+                                <li><strong>Impact:</strong> Customer Experience and Transaction Failures</li>
+                            </ul>
+                        </div>
+
+                        <!-- Instruction / Summary -->
+                        <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                            <h3 style="color: #856404; margin-top: 0;">Recommended Actions</h3>
+                            <ul style="margin: 0; padding-left: 20px;">
+                                <li>Check the machine's network connectivity and signal strength</li>
+                                <li>Verify payment gateway connection and configuration</li>
+                                <li>Test transaction processing manually to identify bottlenecks</li>
+                                <li>Review system logs for recurring timeout error patterns</li>
+                                <li>Check for any software or firmware updates needed</li>
+                                <li>Verify payment processing timeouts are properly configured</li>
+                                <li>Monitor transaction response times during peak hours</li>
+                                <li>Contact technical support if timeout issues persist</li>
+                                <li>Consider increasing transaction timeout thresholds if appropriate</li>
+                            </ul>
+                        </div>
+
+                        <p style="color: #333; margin-top: 0; font-size: 14px; text-align: justify;">
+                            The vending machine shown above has experienced a high number of consecutive timeout transactions. This pattern typically indicates network connectivity issues, payment processing delays, or system performance problems that are preventing successful transaction completion. Please investigate promptly to restore normal operation and prevent customer frustration.
+                        </p>
+                    </td>
+                </tr>
+                <!-- Footer -->
+                <tr>
+                    <td style="background-color: #333; color: white; padding: 15px; text-align: center; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; font-size: 12px;">
+                        <p style="margin: 0;">&copy; <span th:text="${year}"></span> GrabIt System. All Rights Reserved.</p>
+                        <p style="margin: 0;"><em>Please do not reply to this email. This mailbox is not monitored.</em></p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>
