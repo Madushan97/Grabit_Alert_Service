@@ -13,6 +13,7 @@ import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Value;
 import org.thymeleaf.TemplateEngine;
@@ -157,17 +158,17 @@ public class VoidFailedHealthMonitorService {
                 latestTransactions = salesRepository.findLatestByMachineSerialAfterTransactionId(
                     serialNo,
                     tracking.getLastCheckedTransactionId(),
-                    PageRequest.of(0, threshold)
+                    PageRequest.of(0, threshold, Sort.by(Sort.Direction.DESC, "dateTime", "id"))
                 );
             } else if (tracking.getLastCheckedDatetime() != null) {
                 latestTransactions = salesRepository.findLatestByMachineSerialAfterDatetime(
                     serialNo,
                     tracking.getLastCheckedDatetime(),
-                    PageRequest.of(0, threshold)
+                    PageRequest.of(0, threshold, Sort.by(Sort.Direction.DESC, "dateTime", "id"))
                 );
             } else {
                 // Fallback: get latest transactions
-                latestTransactions = salesRepository.findLatestByMachineSerial(serialNo, PageRequest.of(0, threshold));
+                latestTransactions = salesRepository.findLatestByMachineSerial(serialNo, PageRequest.of(0, threshold, Sort.by(Sort.Direction.DESC, "dateTime", "id")));
             }
         } else {
             // First time checking this machine, get the latest threshold number of transactions
@@ -348,7 +349,7 @@ public class VoidFailedHealthMonitorService {
             mailDto.setBody(htmlBody);
 
             // Send email
-            boolean emailSent = emailSender.sendEmail(mailDto, grabitLogo, null);
+            boolean emailSent = emailSender.sendEmail(mailDto, null, null);
 
             if (emailSent) {
                 String partnerNameLog = machinePartner != null ? machinePartner.getName() : "UNKNOWN";

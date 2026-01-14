@@ -15,6 +15,7 @@ import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Value;
 import org.thymeleaf.TemplateEngine;
@@ -118,7 +119,7 @@ public class AllMachineSaleFailedHealthMonitorService {
     }
 
     public void evaluateMachine(String serialNo) {
-        List<Sales> latest = salesRepository.findLatestByMachineSerial(serialNo, PageRequest.of(0, allMachinesMonitorProperties.getFailedSales().getWindowSize()));
+        List<Sales> latest = salesRepository.findLatestByMachineSerial(serialNo, PageRequest.of(0, allMachinesMonitorProperties.getFailedSales().getWindowSize(), Sort.by(Sort.Direction.DESC, "dateTime", "id")));
         if (latest.isEmpty()) {
             LOGGER.debug("No transactions found for machine {}", serialNo);
             return;

@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -31,7 +32,7 @@ import java.util.*;
 public class ConsecutiveVoidCompleteMonitorService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConsecutiveVoidCompleteMonitorService.class);
-    private static final String CONSECUTIVE_VOID_ALERT_CODE = "VOID_COMPLETE";
+    private static final String CONSECUTIVE_VOID_ALERT_CODE = "VOID_COMPLETED";
 
     private final AllMachinesMonitorProperties allMachinesMonitorProperties;
     private final SalesRepository salesRepository;
@@ -134,7 +135,7 @@ public class ConsecutiveVoidCompleteMonitorService {
         String serialNo = vm.getSerialNo();
         int windowSize = allMachinesMonitorProperties.getConsecutiveVoidComplete().getConsecutiveVoidCompleteTransactionWindowSize();
         // Get recent transactions for analysis
-        List<Sales> recentTransactions = salesRepository.findLatestByMachineSerial(serialNo, PageRequest.of(0, windowSize));
+        List<Sales> recentTransactions = salesRepository.findLatestByMachineSerial(serialNo, PageRequest.of(0, windowSize, Sort.by(Sort.Direction.DESC, "dateTime", "id")));
         if (recentTransactions == null || recentTransactions.isEmpty()) {
             LOGGER.debug("No transactions found for machine {}; skipping void pattern evaluation", serialNo);
             return;
@@ -278,9 +279,14 @@ public class ConsecutiveVoidCompleteMonitorService {
         props.put("totalTransactions", analysis.getTotalTransactions());
         props.put("voidCount", analysis.getVoidCount());
         props.put("maxConsecutiveVoids", analysis.getMaxConsecutiveVoids());
+        props.put("consecutiveVoidCount", analysis.getMaxConsecutiveVoids()); // For template consistency
         props.put("voidPercentage", String.format("%.1f", analysis.getVoidPercentage()));
         props.put("thresholdConsecutive", allMachinesMonitorProperties.getConsecutiveVoidComplete().getConsecutiveVoidCompleteConsecutiveVoidThreshold());
         props.put("thresholdPercentage", String.format("%.1f", allMachinesMonitorProperties.getConsecutiveVoidComplete().getConsecutiveVoidCompleteVoidPercentageThreshold()));
+
+        // Add VM specific fields
+        props.put("terminateCode", vm.getTerminateCode() != null ? vm.getTerminateCode() : 0);
+        props.put("productLockCount", vm.getProductLockCount() != null ? vm.getProductLockCount() : 0);
 
         // Get merchant information
         String merchantName = null;
@@ -307,7 +313,7 @@ public class ConsecutiveVoidCompleteMonitorService {
             String htmlBody = templateEngine.process("Consecutive_void_complete", context);
             mailDto.setBody(htmlBody);
 
-            boolean emailSent = emailSender.sendEmail(mailDto, grabitLogo, null);
+            boolean emailSent = emailSender.sendEmail(mailDto, null, null);
             if (emailSent) {
                 String partnerNameLog = machinePartner != null ? machinePartner.getName() : "UNKNOWN";
                 String toLog = (toAddrs != null && toAddrs.length > 0) ? String.join(",", toAddrs) : "<none>";

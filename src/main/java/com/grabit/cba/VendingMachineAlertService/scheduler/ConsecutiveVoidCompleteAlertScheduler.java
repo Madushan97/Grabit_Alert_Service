@@ -19,7 +19,7 @@ public class ConsecutiveVoidCompleteAlertScheduler {
         this.consecutiveVoidCompleteMonitorService = consecutiveVoidCompleteMonitorService;
     }
 
-    @Scheduled(cron = "${monitor.consecutive-void-complete.cron:0 */5 * * * *}")
+    @Scheduled(cron = "${monitor.consecutive-void-complete.consecutiveVoidCompleteCron:0 */5 * * * *}")
     public void checkingConsecutiveVoidCompleteTransactions() {
         LOGGER.info("Consecutive void complete cron start: Consecutive Void Complete Monitor");
         consecutiveVoidCompleteMonitorService.evaluateAllMachines();

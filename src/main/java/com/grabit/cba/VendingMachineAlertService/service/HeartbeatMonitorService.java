@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -145,7 +146,7 @@ public class HeartbeatMonitorService {
         }
 
         // Get latest transaction to determine how long the machine has been offline
-        List<Sales> latestTransactions = salesRepository.findLatestByMachineSerial(serialNo, PageRequest.of(0, 1));
+        List<Sales> latestTransactions = salesRepository.findLatestByMachineSerial(serialNo, PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "dateTime", "id")));
 
         LocalDateTime lastActivity = null;
         if (!latestTransactions.isEmpty()) {

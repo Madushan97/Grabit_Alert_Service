@@ -59,13 +59,4 @@ public class VendingMachine {
         return Objects.hash(id, serialNo);
     }
 
-    @Override
-    public String toString() {
-        return "VendingMachine{" +
-                "id=" + id +
-                ", serialNo='" + serialNo + '\'' +
-                ", merchantId=" + merchantId +
-                ", name='" + name + '\'' +
-                '}';
-    }
 }

@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @Immutable
-
+@ToString(exclude = "vendingMachine")
 public class Sales {
 
     @Id

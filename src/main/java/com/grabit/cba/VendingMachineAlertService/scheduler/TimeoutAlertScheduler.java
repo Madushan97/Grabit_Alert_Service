@@ -19,7 +19,7 @@ public class TimeoutAlertScheduler {
         this.timeoutMonitorService = timeoutMonitorService;
     }
 
-    @Scheduled(cron = "${monitor.timeout-monitor.cron:0 */5 * * * *}")
+    @Scheduled(cron = "${monitor.timeout.timeoutMonitoringCron:0 */5 * * * *}")
     public void checkingTimeoutTransactions() {
         LOGGER.info("Timeout cron start: Timeout Monitor");
         timeoutMonitorService.evaluateAllMachines();

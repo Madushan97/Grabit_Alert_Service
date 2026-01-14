@@ -56,7 +56,7 @@ public class AllMachinesMonitorProperties {
     @Data
     public static class ConsecutiveVoidComplete {
         private boolean consecutiveVoidCompleteEnabled = true;
-        private String consecutiveVoidCompleteCron = "0 */5 * * * *"; // every 5 minutes
+        private String consecutiveVoidCompleteCron = "0 */1 * * * *"; // every 5 minutes
         private int consecutiveVoidCompleteTransactionWindowSize = 10; // check last 10 transactions
         private int consecutiveVoidCompleteConsecutiveVoidThreshold = 3; // alert if 3+ consecutive void_completed
         private double consecutiveVoidCompleteVoidPercentageThreshold = 50.0; // alert if >50% are void_completed
