@@ -10,8 +10,10 @@ import com.grabit.cba.VendingMachineAlertService.database.model.other.Sales;
 import com.grabit.cba.VendingMachineAlertService.database.model.other.VendingMachine;
 import com.grabit.cba.VendingMachineAlertService.database.repository.*;
 import com.grabit.cba.VendingMachineAlertService.dto.requestDto.MailDto;
+import com.grabit.cba.VendingMachineAlertService.enums.TransactionTypes;
 import com.grabit.cba.VendingMachineAlertService.util.EmailServiceUtils;
 import jakarta.annotation.PostConstruct;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,14 +25,13 @@ import org.thymeleaf.context.Context;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
-public class HeartbeatMonitorService {
+public class ConsecutiveVoidCompleteMonitorService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(HeartbeatMonitorService.class);
-    private static final String OFFLINE_ALERT_CODE = "OFFLINE_VM";
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConsecutiveVoidCompleteMonitorService.class);
+    private static final String CONSECUTIVE_VOID_ALERT_CODE = "VOID_COMPLETE";
 
     private final AllMachinesMonitorProperties allMachinesMonitorProperties;
     private final SalesRepository salesRepository;
@@ -46,17 +47,13 @@ public class HeartbeatMonitorService {
     @Value("${spring.mail.username}")
     private String senderMail;
 
+    @Value("${grabit.logo:}")
+    private String grabitLogo;
 
-    public HeartbeatMonitorService(AllMachinesMonitorProperties allMachinesMonitorProperties,
-                                   SalesRepository salesRepository,
-                                   VMRepository vmRepository,
-                                   MerchantsRepository merchantsRepository,
-                                   PartnersRepository partnersRepository,
-                                   AlertTypeRepository alertTypeRepository,
-                                   AlertHistoryRepository alertHistoryRepository,
-                                   AlertEmailConfigRepository alertEmailConfigRepository,
-                                   EmailSender emailSender,
-                                   TemplateEngine templateEngine) {
+    public ConsecutiveVoidCompleteMonitorService(AllMachinesMonitorProperties allMachinesMonitorProperties, SalesRepository salesRepository, VMRepository vmRepository,
+                                               MerchantsRepository merchantsRepository, PartnersRepository partnersRepository, AlertTypeRepository alertTypeRepository,
+                                               AlertHistoryRepository alertHistoryRepository,
+                                               AlertEmailConfigRepository alertEmailConfigRepository, EmailSender emailSender, TemplateEngine templateEngine) {
         this.allMachinesMonitorProperties = allMachinesMonitorProperties;
         this.salesRepository = salesRepository;
         this.vmRepository = vmRepository;
@@ -71,23 +68,22 @@ public class HeartbeatMonitorService {
 
     @PostConstruct
     public void init() {
-        LOGGER.info("HeartbeatMonitorService initialized. enabled={}, cron={}, offlineMachineThresholdMinutes={}, alertCooldownMinutes={}",
-                allMachinesMonitorProperties.getHeartbeat().isHeartbeatMonitoringEnabled(),
-                allMachinesMonitorProperties.getHeartbeat().getHeartbeatMonitoringCron(),
-                allMachinesMonitorProperties.getHeartbeat().getHeartbeatMonitoringOfflineMachineThresholdMinutes(),
-                allMachinesMonitorProperties.getHeartbeat().getHeartbeatMonitoringAlertCooldownMinutes());
+        LOGGER.info("ConsecutiveVoidCompleteMonitorService initialized. enabled={}, cron={}, transactionWindowSize={}, consecutiveVoidThreshold={}, voidPercentageThreshold={}%, alertCooldownMinutes={}",
+                allMachinesMonitorProperties.getConsecutiveVoidComplete().isConsecutiveVoidCompleteEnabled(),
+                allMachinesMonitorProperties.getConsecutiveVoidComplete().getConsecutiveVoidCompleteCron(),
+                allMachinesMonitorProperties.getConsecutiveVoidComplete().getConsecutiveVoidCompleteTransactionWindowSize(),
+                allMachinesMonitorProperties.getConsecutiveVoidComplete().getConsecutiveVoidCompleteConsecutiveVoidThreshold(),
+                allMachinesMonitorProperties.getConsecutiveVoidComplete().getConsecutiveVoidCompleteVoidPercentageThreshold(),
+                allMachinesMonitorProperties.getConsecutiveVoidComplete().getConsecutiveVoidCompleteAlertCooldownMinutes());
     }
 
     public void evaluateAllMachines() {
-        if (!allMachinesMonitorProperties.getHeartbeat().isHeartbeatMonitoringEnabled()) {
-            LOGGER.info("Vending Machine Heartbeat monitor disabled; skipping evaluation");
+        if (!allMachinesMonitorProperties.getConsecutiveVoidComplete().isConsecutiveVoidCompleteEnabled()) {
+            LOGGER.info("Consecutive void complete monitor disabled; skipping evaluation");
             return;
         }
 
-        LOGGER.info("Vending Machine Heartbeat monitor evaluation start for time {}", LocalDateTime.now());
-
-        // Only monitors machines with status=0 (offline) for extended offline duration
-        // AlertHistory is used to persist notification state across service restarts
+        LOGGER.info("Consecutive void complete monitor evaluation start for time {}", LocalDateTime.now());
 
         // Load all partners once and reuse
         List<Partners> allPartners = partnersRepository.findAll();
@@ -111,19 +107,19 @@ public class HeartbeatMonitorService {
                     continue;
                 }
 
-                List<VendingMachine> offlineMachines = vmRepository.findOfflineByMerchantIds(merchantIds);
-                if (offlineMachines == null || offlineMachines.isEmpty()) {
-                    LOGGER.debug("Skipping partner {} (id={}) due to no offline vending machines", partner.getName(), partnerId);
+                List<VendingMachine> activeMachines = vmRepository.findActiveByMerchantIds(merchantIds);
+                if (activeMachines == null || activeMachines.isEmpty()) {
+                    LOGGER.debug("Skipping partner {} (id={}) due to no active vending machines", partner.getName(), partnerId);
                     continue;
                 }
 
-                // Check each offline vending machine's status duration
-                for (VendingMachine vm : offlineMachines) {
+                // Check each vending machine for consecutive void complete transactions
+                for (VendingMachine vm : activeMachines) {
                     String serialNo = vm.getSerialNo();
                     try {
-                        evaluateMachineHeartbeat(vm, partnersCache);
+                        evaluateMachineVoidPattern(vm, partnersCache);
                     } catch (Exception e) {
-                        LOGGER.error("Error evaluating machine {} heartbeat for partner {}: {}", serialNo, partner.getName(), e.getMessage(), e);
+                        LOGGER.error("Error evaluating machine {} void pattern for partner {}: {}", serialNo, partner.getName(), e.getMessage(), e);
                     }
                 }
             } catch (Exception ex) {
@@ -131,63 +127,83 @@ public class HeartbeatMonitorService {
             }
         }
 
-        LOGGER.info("Heartbeat monitor evaluation end for time {}", LocalDateTime.now());
+        LOGGER.info("Consecutive void complete monitor evaluation end for time {}", LocalDateTime.now());
     }
 
-    private void evaluateMachineHeartbeat(VendingMachine vm, Map<Integer, Partners> partnersCache) {
+    private void evaluateMachineVoidPattern(VendingMachine vm, Map<Integer, Partners> partnersCache) {
         String serialNo = vm.getSerialNo();
-        Integer machineStatus = vm.getStatus();
-
-        // Only process offline machines (status = 0)
-        if (machineStatus == null || machineStatus != 0) {
-            LOGGER.debug("Machine {} has status {} (not offline=0); skipping heartbeat evaluation", serialNo, machineStatus);
+        int windowSize = allMachinesMonitorProperties.getConsecutiveVoidComplete().getConsecutiveVoidCompleteTransactionWindowSize();
+        // Get recent transactions for analysis
+        List<Sales> recentTransactions = salesRepository.findLatestByMachineSerial(serialNo, PageRequest.of(0, windowSize));
+        if (recentTransactions == null || recentTransactions.isEmpty()) {
+            LOGGER.debug("No transactions found for machine {}; skipping void pattern evaluation", serialNo);
             return;
         }
 
-        // Get latest transaction to determine how long the machine has been offline
-        List<Sales> latestTransactions = salesRepository.findLatestByMachineSerial(serialNo, PageRequest.of(0, 1));
+        // Analyze transaction patterns
+        VoidAnalysisResult analysis = analyzeVoidPattern(recentTransactions);
 
-        LocalDateTime lastActivity = null;
-        if (!latestTransactions.isEmpty()) {
-            Sales lastTransaction = latestTransactions.get(0);
-            lastActivity = lastTransaction.getDateTime();
+        boolean shouldAlert = false;
+        String alertReason = null;
+
+        // Check if consecutive void threshold is exceeded
+        if (analysis.getMaxConsecutiveVoids() >= allMachinesMonitorProperties.getConsecutiveVoidComplete().getConsecutiveVoidCompleteConsecutiveVoidThreshold()) {
+            shouldAlert = true;
+            alertReason = String.format("%d consecutive VOID_COMPLETE transactions", analysis.getMaxConsecutiveVoids());
         }
 
-        LocalDateTime now = LocalDateTime.now();
-        boolean shouldAlert;
-        long minutesSinceActivity;
-
-        if (lastActivity != null) {
-            Duration offlineDuration = Duration.between(lastActivity, now);
-            minutesSinceActivity = offlineDuration.toMinutes();
-            long thresholdMinutes = allMachinesMonitorProperties.getHeartbeat().getHeartbeatMonitoringOfflineMachineThresholdMinutes();
-            shouldAlert = minutesSinceActivity >= thresholdMinutes;
-        } else {
-            // No transactions found - machine has been offline for unknown duration, alert
-            shouldAlert = true;
-            minutesSinceActivity = Long.MAX_VALUE;
+        // Check if void percentage threshold is exceeded
+        if (analysis.getVoidPercentage() > allMachinesMonitorProperties.getConsecutiveVoidComplete().getConsecutiveVoidCompleteVoidPercentageThreshold()) {
+            if (shouldAlert) {
+                alertReason += String.format(" and %.1f%% void rate", analysis.getVoidPercentage());
+            } else {
+                shouldAlert = true;
+                alertReason = String.format("%.1f%% VOID_COMPLETE rate (threshold: %.1f%%)",
+                    analysis.getVoidPercentage(),
+                    allMachinesMonitorProperties.getConsecutiveVoidComplete().getConsecutiveVoidCompleteVoidPercentageThreshold());
+            }
         }
 
         if (shouldAlert) {
-            LOGGER.info("Offline machine {} has been offline for {} minutes (threshold: {} minutes); triggering alert",
-                       serialNo, minutesSinceActivity == Long.MAX_VALUE ? "unknown" : minutesSinceActivity,
-                       allMachinesMonitorProperties.getHeartbeat().getHeartbeatMonitoringOfflineMachineThresholdMinutes());
-            handleOfflineMachine(vm, lastActivity, minutesSinceActivity, partnersCache);
+            LOGGER.info("Machine {} triggers void complete alert: {}", serialNo, alertReason);
+            handleVoidCompleteAlert(vm, analysis, alertReason, partnersCache);
         } else {
-            LOGGER.debug("Offline machine {} has been offline for {} minutes (below threshold: {} minutes); no alert needed",
-                        serialNo, minutesSinceActivity,
-                        allMachinesMonitorProperties.getHeartbeat().getHeartbeatMonitoringOfflineMachineThresholdMinutes());
+            LOGGER.debug("Machine {} void pattern within thresholds: {} consecutive, {}% void rate",
+                serialNo, analysis.getMaxConsecutiveVoids(), String.format("%.1f", analysis.getVoidPercentage()));
         }
     }
 
-    private void handleOfflineMachine(VendingMachine vm, LocalDateTime lastActivityTime, long minutesSinceActivity, Map<Integer, Partners> partnersCache) {
+    private VoidAnalysisResult analyzeVoidPattern(List<Sales> transactions) {
+        int totalTransactions = transactions.size();
+        int voidCount = 0;
+        int maxConsecutiveVoids = 0;
+        int currentConsecutiveVoids = 0;
+
+        for (Sales transaction : transactions) {
+            String status = Optional.ofNullable(transaction.getTransactionStatus()).map(String::toUpperCase).orElse("");
+
+            if (TransactionTypes.VOID_COMPLETED.name().equals(status)) {
+                voidCount++;
+                currentConsecutiveVoids++;
+                maxConsecutiveVoids = Math.max(maxConsecutiveVoids, currentConsecutiveVoids);
+            } else {
+                currentConsecutiveVoids = 0;
+            }
+        }
+
+        double voidPercentage = totalTransactions > 0 ? (voidCount * 100.0 / totalTransactions) : 0.0;
+
+        return new VoidAnalysisResult(totalTransactions, voidCount, maxConsecutiveVoids, voidPercentage);
+    }
+
+    private void handleVoidCompleteAlert(VendingMachine vm, VoidAnalysisResult analysis, String alertReason, Map<Integer, Partners> partnersCache) {
         String serialNo = vm.getSerialNo();
         Integer vmId = vm.getId();
 
-        // Get alert type for offline machines
-        AlertType alertType = alertTypeRepository.findByCode(OFFLINE_ALERT_CODE).orElse(null);
+        // Get alert type
+        AlertType alertType = alertTypeRepository.findByCode(CONSECUTIVE_VOID_ALERT_CODE).orElse(null);
         if (alertType == null) {
-            LOGGER.warn("AlertType '{}' not found; skipping alert for machine {}", OFFLINE_ALERT_CODE, serialNo);
+            LOGGER.warn("AlertType '{}' not found; skipping alert for machine {}", CONSECUTIVE_VOID_ALERT_CODE, serialNo);
             return;
         }
 
@@ -200,28 +216,22 @@ public class HeartbeatMonitorService {
         if (lastAlert.isPresent()) {
             LocalDateTime lastSent = lastAlert.get().getLastSentAt();
             if (lastSent != null) {
-                if (lastActivityTime != null && !lastSent.isBefore(lastActivityTime)) {
-                    LOGGER.info("Suppressing alert because previous AlertHistory (id={}) was sent at {} which is >= lastActivityTime {}",
-                            lastAlert.get().getId(), lastSent, lastActivityTime);
-                    return;
-                }
-
-                long cooldownMinutes = allMachinesMonitorProperties.getHeartbeat().getHeartbeatMonitoringAlertCooldownMinutes();
+                long cooldownMinutes = allMachinesMonitorProperties.getConsecutiveVoidComplete().getConsecutiveVoidCompleteAlertCooldownMinutes();
                 LocalDateTime now = LocalDateTime.now(ZoneId.systemDefault());
                 Duration elapsed = Duration.between(lastSent, now);
                 if (elapsed.toMinutes() < cooldownMinutes) {
-                    LOGGER.info("Suppressing duplicate alert for offline machine {} (sent {} minutes ago, cooldown {} minutes)",
+                    LOGGER.info("Suppressing duplicate void complete alert for machine {} (sent {} minutes ago, cooldown {} minutes)",
                             serialNo, elapsed.toMinutes(), cooldownMinutes);
                     return;
                 }
             }
         }
 
-        // Send offline machine alert
-        sendOfflineMachineAlert(vm, lastActivityTime, minutesSinceActivity, alertType, partnersCache);
+        // Send void complete alert
+        sendVoidCompleteAlert(vm, analysis, alertReason, alertType, partnersCache);
     }
 
-    private void sendOfflineMachineAlert(VendingMachine vm, LocalDateTime lastActivityTime, long minutesSinceActivity, AlertType alertType, Map<Integer, Partners> partnersCache) {
+    private void sendVoidCompleteAlert(VendingMachine vm, VoidAnalysisResult analysis, String alertReason, AlertType alertType, Map<Integer, Partners> partnersCache) {
         String serialNo = vm.getSerialNo();
         Integer vmId = vm.getId();
 
@@ -256,37 +266,21 @@ public class HeartbeatMonitorService {
         mailDto.setTo(toAddrs);
         mailDto.setCc(ccAddrs);
         mailDto.setBcc(bccAddrs);
-        mailDto.setSubject(String.format("ALERT: Vending Machine %s - Extended Offline Status", serialNo));
+        mailDto.setSubject(String.format("CRITICAL ALERT: Machine %s - Consecutive Void Complete Transactions", serialNo));
         mailDto.setFrom(senderMail);
         mailDto.setHtml(true);
 
-        // Prepare template properties for offline machine
+        // Prepare template properties
         Map<String, Object> props = new HashMap<>();
         props.put("vendingSerialNumber", serialNo);
         props.put("vmName", vm.getName());
-        props.put("machineStatus", vm.getStatus());
-        props.put("machineStatusDescription", "Offline");
-        props.put("alertReason", "Extended Offline Status");
-
-        // Format last activity time
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        String lastActivityFormatted = lastActivityTime != null ? lastActivityTime.atZone(ZoneId.systemDefault()).format(dtf) : "No transactions found";
-        props.put("offlineSince", lastActivityFormatted);
-
-        // Format duration since last activity (how long offline)
-        String offlineDuration;
-        if (minutesSinceActivity == Long.MAX_VALUE) {
-            offlineDuration = "Unknown duration";
-        } else {
-            long hours = minutesSinceActivity / 60;
-            long remainingMinutes = minutesSinceActivity % 60;
-            if (hours > 0) {
-                offlineDuration = String.format("%d hours %d minutes", hours, remainingMinutes);
-            } else {
-                offlineDuration = String.format("%d minutes", remainingMinutes);
-            }
-        }
-        props.put("offlineDuration", offlineDuration);
+        props.put("alertReason", alertReason);
+        props.put("totalTransactions", analysis.getTotalTransactions());
+        props.put("voidCount", analysis.getVoidCount());
+        props.put("maxConsecutiveVoids", analysis.getMaxConsecutiveVoids());
+        props.put("voidPercentage", String.format("%.1f", analysis.getVoidPercentage()));
+        props.put("thresholdConsecutive", allMachinesMonitorProperties.getConsecutiveVoidComplete().getConsecutiveVoidCompleteConsecutiveVoidThreshold());
+        props.put("thresholdPercentage", String.format("%.1f", allMachinesMonitorProperties.getConsecutiveVoidComplete().getConsecutiveVoidCompleteVoidPercentageThreshold()));
 
         // Get merchant information
         String merchantName = null;
@@ -305,22 +299,21 @@ public class HeartbeatMonitorService {
         props.put("merchantName", merchantName);
         props.put("merchantAddress", merchantAddress);
         props.put("location", merchantAddress);
-
         props.put("year", Calendar.getInstance().get(Calendar.YEAR));
 
         try {
             Context context = new Context();
             context.setVariables(props);
-            String htmlBody = templateEngine.process("Offline_vm", context);
+            String htmlBody = templateEngine.process("Consecutive_void_complete", context);
             mailDto.setBody(htmlBody);
 
-            boolean emailSent = emailSender.sendEmail(mailDto, null, null);
+            boolean emailSent = emailSender.sendEmail(mailDto, grabitLogo, null);
             if (emailSent) {
                 String partnerNameLog = machinePartner != null ? machinePartner.getName() : "UNKNOWN";
                 String toLog = (toAddrs != null && toAddrs.length > 0) ? String.join(",", toAddrs) : "<none>";
-                LOGGER.info("Offline Machine Alert email sent at {} to partner {} email {}", LocalDateTime.now(ZoneId.systemDefault()), partnerNameLog, toLog);
-                LOGGER.info("Offline Machine Alert sent for machine {} (offline for {} minutes)",
-                           serialNo, minutesSinceActivity == Long.MAX_VALUE ? "unknown" : minutesSinceActivity);
+                LOGGER.info("Consecutive void complete alert email sent at {} to partner {} email {}",
+                           LocalDateTime.now(ZoneId.systemDefault()), partnerNameLog, toLog);
+                LOGGER.info("Consecutive void complete alert sent for machine {} - {}", serialNo, alertReason);
 
                 // Persist/update AlertHistory ONLY if email was sent successfully
                 LocalDateTime sendTime = LocalDateTime.now(ZoneId.systemDefault());
@@ -346,14 +339,29 @@ public class HeartbeatMonitorService {
                     history.setAlertType(alertType);
                     history.setPartnerName(machinePartner != null ? machinePartner.getName() : null);
                     alertHistoryRepository.saveAndFlush(history);
-                    LOGGER.info("Inserted AlertHistory for offline machine {} at {} (history id={})", serialNo, history.getLastSentAt(), history.getId());
+                    LOGGER.info("Inserted AlertHistory for consecutive void complete machine {} at {} (history id={})", serialNo, history.getLastSentAt(), history.getId());
                 }
             } else {
-                LOGGER.warn("Offline Machine Alert email send failed for machine {}; skipping AlertHistory persist", serialNo);
+                LOGGER.warn("Consecutive void complete alert email send failed for machine {}; skipping AlertHistory persist", serialNo);
             }
         } catch (Exception e) {
-            LOGGER.error("Error sending offline machine alert for machine {}: {}", serialNo, e.getMessage(), e);
+            LOGGER.error("Error sending consecutive void complete alert for machine {}: {}", serialNo, e.getMessage(), e);
         }
     }
 
+    // Inner class to hold void analysis results
+    @Getter
+    public static class VoidAnalysisResult {
+        private final int totalTransactions;
+        private final int voidCount;
+        private final int maxConsecutiveVoids;
+        private final double voidPercentage;
+
+        public VoidAnalysisResult(int totalTransactions, int voidCount, int maxConsecutiveVoids, double voidPercentage) {
+            this.totalTransactions = totalTransactions;
+            this.voidCount = voidCount;
+            this.maxConsecutiveVoids = maxConsecutiveVoids;
+            this.voidPercentage = voidPercentage;
+        }
+    }
 }

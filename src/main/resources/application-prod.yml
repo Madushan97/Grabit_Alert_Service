@@ -57,6 +57,24 @@ monitor:
     voidFailureThreshold: ${VOID_FAILED_FAILURE_THRESHOLD}
     voidFailedCron: ${VOID_FAILED_CRON}
 
+  heartbeat:
+    heartbeatMonitoringEnabled: ${HEARTBEAT_MONITOR_ENABLED}
+    heartbeatMonitoringCron: ${HEARTBEAT_MONITOR_CRON}
+    heartbeatMonitoringOfflineMachineThresholdMinutes: ${HEARTBEAT_MONITOR_OFFLINE_THRESHOLD_MINUTES}
+    heartbeatMonitoringAlertCooldownMinutes: ${HEARTBEAT_MONITOR_ALERT_COOLDOWN_MINUTES}
 
+  consecutive-void-complete:
+    consecutiveVoidCompleteEnabled: ${CONSECUTIVE_VOID_COMPLETE_ENABLED}
+    consecutiveVoidCompleteCron: ${CONSECUTIVE_VOID_COMPLETE_CRON}
+    consecutiveVoidCompleteTransactionWindowSize: ${CONSECUTIVE_VOID_COMPLETE_WINDOW_SIZE}
+    consecutiveVoidCompleteConsecutiveVoidThreshold: ${CONSECUTIVE_VOID_COMPLETE_THRESHOLD}
+    consecutiveVoidCompleteVoidPercentageThreshold: ${CONSECUTIVE_VOID_COMPLETE_PERCENTAGE_THRESHOLD}
+    consecutiveVoidCompleteAlertCooldownMinutes: ${CONSECUTIVE_VOID_COMPLETE_ALERT_COOLDOWN_MINUTES}
 
-
+  timeout:
+    timeoutMonitoringEnabled: ${TIMEOUT_MONITOR_ENABLED}
+    timeoutMonitoringCron: ${TIMEOUT_MONITOR_CRON}
+    timeoutMonitoringTransactionWindowSize: ${TIMEOUT_MONITOR_WINDOW_SIZE}
+    timeoutMonitoringConsecutiveTimeoutThreshold: ${TIMEOUT_MONITOR_CONSECUTIVE_THRESHOLD}
+    timeoutMonitoringTimeoutPercentageThreshold: ${TIMEOUT_MONITOR_PERCENTAGE_THRESHOLD}
+    timeoutMonitoringAlertCooldownMinutes: ${TIMEOUT_MONITOR_ALERT_COOLDOWN_MINUTES}

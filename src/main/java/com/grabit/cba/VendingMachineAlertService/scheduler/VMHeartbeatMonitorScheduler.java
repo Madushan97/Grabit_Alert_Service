@@ -9,17 +9,17 @@ import org.springframework.stereotype.Component;
 
 @Component
 @EnableScheduling
-public class VendingMachineHeartbeatMonitorScheduler {
+public class VMHeartbeatMonitorScheduler {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(VendingMachineHeartbeatMonitorScheduler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(VMHeartbeatMonitorScheduler.class);
 
     private final HeartbeatMonitorService heartbeatMonitorService;
 
-    public VendingMachineHeartbeatMonitorScheduler(HeartbeatMonitorService heartbeatMonitorService) {
+    public VMHeartbeatMonitorScheduler(HeartbeatMonitorService heartbeatMonitorService) {
         this.heartbeatMonitorService = heartbeatMonitorService;
     }
 
-    @Scheduled(cron = "${monitor.heartbeat-monitor.cron:0 */10 * * * *}")
+    @Scheduled(cron = "${monitor.heartbeat.heartbeatMonitoringCron:0 */10 * * * *}")
     public void runHeartbeatMonitoring() {
         LOGGER.info("Vending Machine Heartbeat monitoring cron start: Checking offline vending machines");
         heartbeatMonitorService.evaluateAllMachines();
