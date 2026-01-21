@@ -5,6 +5,6 @@ CREATE TABLE IF NOT EXISTS Alert_Type (
   name VARCHAR(255) NOT NULL,
   description VARCHAR(500),
   severity VARCHAR(50),
-  createdAt DATETIME(6) NOT NULL,
+  createdAt DATETIME(6) NULL,
   updatedAt DATETIME(6) NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

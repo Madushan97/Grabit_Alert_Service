@@ -20,7 +20,7 @@ public class AllMachinesMonitorProperties {
 
     @Data
     public static class FailedSales {
-        private boolean enabled = true;
+        private boolean enabled = false;
         private String cron = "0 */5 * * * *";
         private int windowSize = 10;
         private int failureThreshold = 3;
@@ -31,14 +31,14 @@ public class AllMachinesMonitorProperties {
 
     @Data
     public static class Baseline {
-        private boolean baselineEnabled = true;
+        private boolean baselineEnabled = false;
         private String baselineCron = "0 30 2 * * *";
         private int lookbackPeriodsMonths = 1;
     }
 
     @Data
     public static class HourlyBaselineAlert {
-        private boolean hourlyBaselineAlertEnabled = true;
+        private boolean hourlyBaselineAlertEnabled = false;
         private String hourlyBaselineAlertCron = "0 5 * * * *";
         private double baselineDropThresholdPercent = 0.30;
         private int baselineConsecutiveHoursRequired = 2;
@@ -47,7 +47,7 @@ public class AllMachinesMonitorProperties {
 
     @Data
     public static class VoidFailed {
-        private boolean voidFailedEnabled = true;
+        private boolean voidFailedEnabled = false;
         private String voidFailedCron = "0 */5 * * * *";
         private int voidFailureThreshold = 5;
         private int alertCooldownMinutes = 60;
@@ -65,7 +65,7 @@ public class AllMachinesMonitorProperties {
 
     @Data
     public static class HeartbeatMonitor {
-        private boolean heartbeatMonitoringEnabled = true;
+        private boolean heartbeatMonitoringEnabled = false;
         private String heartbeatMonitoringCron = "0 */10 * * * *"; // every 10 minutes
         private int heartbeatMonitoringOfflineMachineThresholdMinutes = 120; // alert if offline machine stays offline for 120+ minutes (2 hours)
         private int heartbeatMonitoringAlertCooldownMinutes = 60; // cooldown between alerts
@@ -73,7 +73,7 @@ public class AllMachinesMonitorProperties {
 
     @Data
     public static class TimeoutMonitor {
-        private boolean timeoutMonitoringEnabled = true;
+        private boolean timeoutMonitoringEnabled = false;
         private String timeoutMonitoringCron = "0 */5 * * * *"; // every 5 minutes
         private int timeoutMonitoringTransactionWindowSize = 10; // check last 10 transactions
         private int timeoutMonitoringConsecutiveTimeoutThreshold = 3; // alert if 3+ consecutive timeouts

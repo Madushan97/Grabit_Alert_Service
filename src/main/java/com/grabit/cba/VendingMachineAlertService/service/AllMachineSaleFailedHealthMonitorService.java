@@ -369,33 +369,19 @@ public class AllMachineSaleFailedHealthMonitorService {
                 LOGGER.info("Sale Failed Email has been sent at {} to partner {} email {}", java.time.LocalDateTime.now(java.time.ZoneId.systemDefault()), partnerNameLog, toLog);
                 LOGGER.info("Sale Failed Alert email sent for machine {} (consecutiveFailures={}, failuresInWindow={})", serialNo, consecutiveFailures, failuresInWindow);
 
-                // persist/update AlertHistory ONLY if email was sent successfully
+                // persist AlertHistory ONLY if email was sent successfully - always create new record
                 java.time.LocalDateTime sendTime = java.time.LocalDateTime.now(ZoneId.systemDefault());
-                if (last.isPresent()) {
-                    AlertHistory existing = last.get();
-                    existing.setVendingMachineId(vmId);
-                    existing.setVendingMachineSerial(serialNo);
-                    existing.setLastSentAt(sendTime);
-                    existing.setAlertType(selectedAlertType);
-                    // store partner name if available
-                    if (machinePartner != null) {
-                        existing.setPartnerName(machinePartner.getName());
-                    }
-                    alertHistoryRepository.saveAndFlush(existing);
-                    LOGGER.info("Updated existing AlertHistory id={} for machine {} with lastSentAt={}", existing.getId(), serialNo, existing.getLastSentAt());
-                } else {
-                    AlertHistory history = new AlertHistory();
-                    history.setVendingMachineId(vmId);
-                    history.setVendingMachineSerial(serialNo);
-                    if (history.getVendingMachineId() == null) {
-                        LOGGER.warn("Could not resolve vendingMachineId for serial {}; AlertHistory will store null", serialNo);
-                    }
-                    history.setLastSentAt(sendTime);
-                    history.setAlertType(selectedAlertType);
-                    history.setPartnerName(machinePartner != null ? machinePartner.getName() : null);
-                    alertHistoryRepository.saveAndFlush(history);
-                    LOGGER.info("Inserted AlertHistory for machine {} at {} (history id={})", serialNo, history.getLastSentAt(), history.getId());
+                AlertHistory history = new AlertHistory();
+                history.setVendingMachineId(vmId);
+                history.setVendingMachineSerial(serialNo);
+                if (history.getVendingMachineId() == null) {
+                    LOGGER.warn("Could not resolve vendingMachineId for serial {}; AlertHistory will store null", serialNo);
                 }
+                history.setLastSentAt(sendTime);
+                history.setAlertType(selectedAlertType);
+                history.setPartnerName(machinePartner != null ? machinePartner.getName() : null);
+                alertHistoryRepository.saveAndFlush(history);
+                LOGGER.info("Inserted new AlertHistory for machine {} at {} (history id={})", serialNo, history.getLastSentAt(), history.getId());
 
                 unhealthyMachinesLastFailure.put(serialNo, lastFailureTime);
             } else {

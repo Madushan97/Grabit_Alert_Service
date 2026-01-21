@@ -323,32 +323,19 @@ public class HeartbeatMonitorService {
                 LOGGER.info("Offline Machine Alert sent for machine {} (offline for {} minutes)",
                            serialNo, minutesSinceActivity == Long.MAX_VALUE ? "unknown" : minutesSinceActivity);
 
-                // Persist/update AlertHistory ONLY if email was sent successfully
+                // Persist AlertHistory ONLY if email was sent successfully - always create new record
                 LocalDateTime sendTime = LocalDateTime.now(ZoneId.systemDefault());
-                if (alertHistoryRepository.findLatestByVendingMachineIdAndAlertTypeId(vmId, alertType.getId()).isPresent()) {
-                    AlertHistory existing = alertHistoryRepository.findLatestByVendingMachineIdAndAlertTypeId(vmId, alertType.getId()).get();
-                    existing.setVendingMachineId(vmId);
-                    existing.setVendingMachineSerial(serialNo);
-                    existing.setLastSentAt(sendTime);
-                    existing.setAlertType(alertType);
-                    if (machinePartner != null) {
-                        existing.setPartnerName(machinePartner.getName());
-                    }
-                    alertHistoryRepository.saveAndFlush(existing);
-                    LOGGER.info("Updated existing AlertHistory id={} for machine {} with lastSentAt={}", existing.getId(), serialNo, existing.getLastSentAt());
-                } else {
-                    AlertHistory history = new AlertHistory();
-                    history.setVendingMachineId(vmId);
-                    history.setVendingMachineSerial(serialNo);
-                    if (history.getVendingMachineId() == null) {
-                        LOGGER.warn("Could not resolve vendingMachineId for serial {}; AlertHistory will store null", serialNo);
-                    }
-                    history.setLastSentAt(sendTime);
-                    history.setAlertType(alertType);
-                    history.setPartnerName(machinePartner != null ? machinePartner.getName() : null);
-                    alertHistoryRepository.saveAndFlush(history);
-                    LOGGER.info("Inserted AlertHistory for offline machine {} at {} (history id={})", serialNo, history.getLastSentAt(), history.getId());
+                AlertHistory history = new AlertHistory();
+                history.setVendingMachineId(vmId);
+                history.setVendingMachineSerial(serialNo);
+                if (history.getVendingMachineId() == null) {
+                    LOGGER.warn("Could not resolve vendingMachineId for serial {}; AlertHistory will store null", serialNo);
                 }
+                history.setLastSentAt(sendTime);
+                history.setAlertType(alertType);
+                history.setPartnerName(machinePartner != null ? machinePartner.getName() : null);
+                alertHistoryRepository.saveAndFlush(history);
+                LOGGER.info("Inserted new AlertHistory for offline machine {} at {} (history id={})", serialNo, history.getLastSentAt(), history.getId());
             } else {
                 LOGGER.warn("Offline Machine Alert email send failed for machine {}; skipping AlertHistory persist", serialNo);
             }

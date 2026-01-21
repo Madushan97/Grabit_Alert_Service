@@ -293,29 +293,18 @@ public class HourlyBaselineDropAlertScheduler {
                 String recipients = (mail.getTo() != null && mail.getTo().length > 0) ? String.join(",", mail.getTo()) : "<none>";
                 LOGGER.info("Partner={} sent baseline drop alert email at {} to {} for {} machines", partnerName, timestamp, recipients, rowsToAlert.size());
 
-                // Upsert AlertHistory for each machine alerted
+                // Create new AlertHistory record for each machine alerted
                 for (EmailRow r : rowsToAlert) {
                     Integer vmId = vmRepository.findBySerialNo(r.getSerial()).map(VendingMachine::getId).orElse(null);
-                    Optional<AlertHistory> lastHist = Optional.empty();
-                    if (vmId != null) lastHist = alertHistoryRepository.findLatestByVendingMachineAndAlertType(vmId, alertType);
-                    if (lastHist.isEmpty()) lastHist = alertHistoryRepository.findLatestByVendingMachineSerialAndAlertType(r.getSerial(), alertType);
 
-                    if (lastHist.isPresent()) {
-                        AlertHistory h = lastHist.get();
-                        h.setVendingMachineId(vmId);
-                        h.setVendingMachineSerial(r.getSerial());
-                        h.setLastSentAt(now);
-                        h.setAlertType(alertType);
-                        alertHistoryRepository.saveAndFlush(h);
-                    } else {
-                        AlertHistory h = new AlertHistory();
-                        h.setVendingMachineId(vmId);
-                        h.setVendingMachineSerial(r.getSerial());
-                        h.setLastSentAt(now);
-                        h.setAlertType(alertType);
-                        h.setPartnerName(partnerName);
-                        alertHistoryRepository.saveAndFlush(h);
-                    }
+                    // Always create a new AlertHistory record for each email send
+                    AlertHistory h = new AlertHistory();
+                    h.setVendingMachineId(vmId);
+                    h.setVendingMachineSerial(r.getSerial());
+                    h.setLastSentAt(now);
+                    h.setAlertType(alertType);
+                    h.setPartnerName(partnerName);
+                    alertHistoryRepository.saveAndFlush(h);
                 }
             } catch (Exception ex) {
                 LOGGER.error("Partner={} failed to send baseline drop alert email: {}", partnerName, ex.getMessage(), ex);
