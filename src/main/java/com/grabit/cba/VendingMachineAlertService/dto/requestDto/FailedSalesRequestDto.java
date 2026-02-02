@@ -25,3 +25,4 @@ public class FailedSalesRequestDto {
     @NotBlank(message = "Email subject is required")
     private String subject;
 }
+

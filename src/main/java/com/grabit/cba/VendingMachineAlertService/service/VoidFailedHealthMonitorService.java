@@ -383,6 +383,11 @@ public class VoidFailedHealthMonitorService {
         props.put("transactionAmount", formatAmount(transaction.getAmount()));
         props.put("tranInvoiceNo", transaction.getTranInvoiceNo());
         props.put("tranBatchNo", transaction.getTranBatchNo());
+        props.put("terminalId", transaction.getTranTerminalID());
+        props.put("merchantId", transaction.getTranMerchantID());
+        props.put("tranApproveCode", transaction.getTranApproveCode());
+        props.put("maskedPan", transaction.getTranMaskedPAN());
+        props.put("discount", transaction.getDiscount());
 
         // Machine properties
         props.put("vendingSerialNumber", serialNo);

@@ -27,10 +27,10 @@
                         <!-- Transaction Details -->
                         <h2 style="margin: 0 0 20px 0; font-size: 18px; color: #dc3545;">Transaction Details</h2>
                         <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border: 1px solid #ddd; border-collapse: collapse; margin-bottom: 20px;">
-                            <tr>
-                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Transaction ID</th>
-                                <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${transactionId}">[Transaction ID]</td>
-                            </tr>
+<!--                            <tr>-->
+<!--                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Transaction ID</th>-->
+<!--                                <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${transactionId}">[Transaction ID]</td>-->
+<!--                            </tr>-->
                             <tr>
                                 <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Transaction Date & Time</th>
                                 <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${transactionDateTime}">[Transaction DateTime]</td>
@@ -38,6 +38,26 @@
                             <tr th:if="${transactionAmount}">
                                 <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Transaction Amount</th>
                                 <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${transactionAmount}">[Transaction Amount]</td>
+                            </tr>
+                            <tr th:if="${terminalId}">
+                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Terminal ID</th>
+                                <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${terminalId}">[Terminal ID]</td>
+                            </tr>
+                            <tr th:if="${merchantId}">
+                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Merchant ID</th>
+                                <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${merchantId}">[Merchant ID]</td>
+                            </tr>
+                            <tr th:if="${tranApproveCode}">
+                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Tran Approve Code</th>
+                                <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${tranApproveCode}">[Tran Approve Code]</td>
+                            </tr>
+                            <tr th:if="${maskedPan}">
+                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Masked PAN</th>
+                                <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${maskedPan}">[Masked PAN]</td>
+                            </tr>
+                            <tr th:if="${discount}">
+                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Discount</th>
+                                <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${discount}">[Discount]</td>
                             </tr>
                             <tr th:if="${tranInvoiceNo}">
                                 <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Invoice Number</th>
@@ -64,14 +84,14 @@
                                 <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Merchant</th>
                                 <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${merchantName}">[Merchant]</td>
                             </tr>
-                            <tr>
-                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Terminate Code</th>
-                                <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${terminateCode}">[Terminate Code]</td>
-                            </tr>
-                            <tr>
-                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Product Lock Count</th>
-                                <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${productLockCount}">[Product Lock Count]</td>
-                            </tr>
+<!--                            <tr>-->
+<!--                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Terminate Code</th>-->
+<!--                                <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${terminateCode}">[Terminate Code]</td>-->
+<!--                            </tr>-->
+<!--                            <tr>-->
+<!--                                <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Product Lock Count</th>-->
+<!--                                <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${productLockCount}">[Product Lock Count]</td>-->
+<!--                            </tr>-->
                             <tr>
                                 <th style="background-color: #f8f8f8; padding: 12px; border-bottom: 1px solid #ddd; text-align: left;">Location</th>
                                 <td style="padding: 12px; border-bottom: 1px solid #ddd;" th:text="${location}">[Location]</td>
